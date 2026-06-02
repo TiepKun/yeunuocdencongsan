@@ -1,106 +1,92 @@
 "use client";
 
-import { Pause, Play, Rewind, SkipBack, SkipForward } from "lucide-react";
-import { useEffect } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { PointerEvent, useRef } from "react";
 
 import { phaseMeta, timelineEvents } from "@/data/timeline";
 import { useTimelineStore } from "@/store/useTimelineStore";
 
+const SCROLL_STEP = 320;
+
 export default function TimelineBar() {
   const selectedEventId = useTimelineStore((state) => state.selectedEventId);
-  const isAutoPlaying = useTimelineStore((state) => state.isAutoPlaying);
-  const reducedMotion = useTimelineStore((state) => state.reducedMotion);
   const selectEvent = useTimelineStore((state) => state.selectEvent);
-  const nextEvent = useTimelineStore((state) => state.nextEvent);
-  const previousEvent = useTimelineStore((state) => state.previousEvent);
-  const setAutoPlaying = useTimelineStore((state) => state.setAutoPlaying);
-  const setReducedMotion = useTimelineStore((state) => state.setReducedMotion);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const dragging = useRef(false);
+  const startX = useRef(0);
+  const startScrollLeft = useRef(0);
 
-  useEffect(() => {
-    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReducedMotion(media.matches);
+  const scrollByStep = (direction: "left" | "right") => {
+    scrollRef.current?.scrollBy({
+      left: direction === "left" ? -SCROLL_STEP : SCROLL_STEP,
+      behavior: "smooth"
+    });
+  };
 
-    const handleChange = (event: MediaQueryListEvent) => {
-      setReducedMotion(event.matches);
-    };
+  const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    if (!scrollRef.current) {
+      return;
+    }
 
-    media.addEventListener("change", handleChange);
-    return () => media.removeEventListener("change", handleChange);
-  }, [setReducedMotion]);
+    dragging.current = true;
+    startX.current = event.clientX;
+    startScrollLeft.current = scrollRef.current.scrollLeft;
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    if (!dragging.current || !scrollRef.current) {
+      return;
+    }
+
+    const delta = event.clientX - startX.current;
+    scrollRef.current.scrollLeft = startScrollLeft.current - delta;
+  };
+
+  const handlePointerEnd = (event: PointerEvent<HTMLDivElement>) => {
+    dragging.current = false;
+    event.currentTarget.releasePointerCapture(event.pointerId);
+  };
 
   return (
-    <section className="glass-panel px-4 py-4 text-ivory">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-        <div>
-          <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-brass">
-            Timeline 2D
-          </h2>
-          <p className="mt-1 text-xs text-ivory/58">
-            Click vào năm để mở chi tiết và đưa camera đến mốc tương ứng.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
+    <section className="glass-panel px-4 py-5 text-ivory">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h2 className="text-sm font-black uppercase tracking-[0.18em] text-brass">
+          Timeline 2D
+        </h2>
+        <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={previousEvent}
-            title="Mốc trước"
-            className="timeline-control"
+            aria-label="Kéo timeline sang trái"
+            className="timeline-scroll-button"
+            onClick={() => scrollByStep("left")}
           >
-            <SkipBack aria-hidden="true" className="h-4 w-4" />
-            <span>Trước</span>
+            <ChevronLeft aria-hidden="true" className="h-5 w-5" />
           </button>
           <button
             type="button"
-            onClick={nextEvent}
-            title="Mốc sau"
-            className="timeline-control"
+            aria-label="Kéo timeline sang phải"
+            className="timeline-scroll-button"
+            onClick={() => scrollByStep("right")}
           >
-            <SkipForward aria-hidden="true" className="h-4 w-4" />
-            <span>Sau</span>
+            <ChevronRight aria-hidden="true" className="h-5 w-5" />
           </button>
-          <button
-            type="button"
-            onClick={() => setAutoPlaying(!isAutoPlaying)}
-            title={
-              isAutoPlaying ? "Tạm dừng timeline" : "Tự động chạy timeline"
-            }
-            className="timeline-control bg-brass text-coal hover:bg-[#e0b961]"
-          >
-            {isAutoPlaying ? (
-              <Pause aria-hidden="true" className="h-4 w-4" />
-            ) : (
-              <Play aria-hidden="true" className="h-4 w-4" />
-            )}
-            <span>{isAutoPlaying ? "Tạm dừng" : "Tự động"}</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setAutoPlaying(false);
-              selectEvent(timelineEvents[0].id);
-            }}
-            title="Quay lại mốc đầu"
-            className="timeline-control"
-          >
-            <Rewind aria-hidden="true" className="h-4 w-4" />
-            <span>Về đầu</span>
-          </button>
-          <label className="inline-flex min-h-10 items-center gap-2 border border-white/10 bg-black/20 px-3 text-xs font-semibold uppercase tracking-[0.08em] text-ivory/70">
-            <input
-              type="checkbox"
-              checked={reducedMotion}
-              onChange={(event) => setReducedMotion(event.target.checked)}
-              className="h-4 w-4 accent-brass"
-            />
-            Giảm chuyển động
-          </label>
         </div>
       </div>
 
-      <div className="mt-5 overflow-x-auto pb-1">
-        <div className="relative flex min-w-[1040px] items-stretch gap-3">
-          <div className="absolute left-5 right-5 top-5 h-px bg-gradient-to-r from-[#74b8d8] via-[#ffd36a] to-[#9f2f2b]" />
+      <div
+        ref={scrollRef}
+        className="timeline-scroll overflow-x-auto pb-3"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerEnd}
+        onPointerCancel={handlePointerEnd}
+        onPointerLeave={() => {
+          dragging.current = false;
+        }}
+      >
+        <div className="relative flex min-w-[1180px] items-stretch gap-3 pr-2">
+          <div className="absolute left-5 right-5 top-5 h-px bg-gradient-to-r from-[#7aa56d] via-[#ffd36a] to-[#9f2f2b]" />
           {timelineEvents.map((event) => {
             const selected = event.id === selectedEventId;
             const phase = phaseMeta[event.phase];
@@ -114,7 +100,7 @@ export default function TimelineBar() {
                 title={`${event.year} - ${event.title}`}
               >
                 <span
-                  className="h-9 w-9 border transition"
+                  className="h-9 w-9 rounded-full border transition"
                   style={{
                     borderColor: selected ? phase.glow : `${phase.accent}88`,
                     backgroundColor: selected ? phase.glow : "#0b1118",
@@ -124,16 +110,16 @@ export default function TimelineBar() {
                   }}
                 />
                 <span
-                  className={`min-h-20 w-full border px-2 py-3 transition ${
+                  className={`min-h-20 w-full rounded-lg border px-2 py-3 transition ${
                     selected
                       ? "border-brass bg-brass/15 text-ivory"
                       : "border-white/10 bg-black/20 text-ivory/62 hover:border-brass/50 hover:text-ivory"
                   }`}
                 >
-                  <span className="block text-sm font-semibold">
+                  <span className="block text-sm font-black">
                     {event.year}
                   </span>
-                  <span className="mt-1 line-clamp-2 block text-[11px] leading-4">
+                  <span className="mt-1 line-clamp-2 block text-[11px] font-semibold leading-4">
                     {event.title}
                   </span>
                 </span>

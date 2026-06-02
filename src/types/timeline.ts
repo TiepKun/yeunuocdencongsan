@@ -1,9 +1,11 @@
 export type TimelinePhase =
+  | "roots"
   | "search_path"
   | "ideological_turning_point"
   | "formation";
 
 export type TimelineModelType =
+  | "home"
   | "ship"
   | "globe"
   | "paris"

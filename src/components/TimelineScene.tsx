@@ -1,15 +1,18 @@
 "use client";
 
-import { Line, OrbitControls, Preload, Stars } from "@react-three/drei";
+import { Html, Line, OrbitControls, Preload, Stars } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Bloom, EffectComposer, Vignette } from "@react-three/postprocessing";
-import { Suspense, useEffect, useMemo, useRef } from "react";
+import { Eye } from "lucide-react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 
 import { getTimelineIndex, phaseMeta, timelineEvents } from "@/data/timeline";
 import { useTimelineStore } from "@/store/useTimelineStore";
 
 import TimelineNode, { type NodePosition } from "./TimelineNode";
+
+const AUTO_ADVANCE_DELAY_MS = 10000;
 
 function getNodePositions(): NodePosition[] {
   const midpoint = (timelineEvents.length - 1) / 2;
@@ -23,7 +26,6 @@ function getNodePositions(): NodePosition[] {
 
 function AutoAdvance() {
   const isAutoPlaying = useTimelineStore((state) => state.isAutoPlaying);
-  const reducedMotion = useTimelineStore((state) => state.reducedMotion);
   const nextEvent = useTimelineStore((state) => state.nextEvent);
 
   useEffect(() => {
@@ -31,18 +33,21 @@ function AutoAdvance() {
       return;
     }
 
-    const interval = window.setInterval(
-      nextEvent,
-      reducedMotion ? 4300 : 2900
-    );
+    const interval = window.setInterval(nextEvent, AUTO_ADVANCE_DELAY_MS);
 
     return () => window.clearInterval(interval);
-  }, [isAutoPlaying, nextEvent, reducedMotion]);
+  }, [isAutoPlaying, nextEvent]);
 
   return null;
 }
 
-function CameraRig({ positions }: { positions: NodePosition[] }) {
+function CameraRig({
+  positions,
+  userControllingCamera
+}: {
+  positions: NodePosition[];
+  userControllingCamera: boolean;
+}) {
   const selectedEventId = useTimelineStore((state) => state.selectedEventId);
   const reducedMotion = useTimelineStore((state) => state.reducedMotion);
   const { camera } = useThree();
@@ -57,6 +62,10 @@ function CameraRig({ positions }: { positions: NodePosition[] }) {
   const selectedIndex = getTimelineIndex(selectedEventId);
 
   useFrame((_, delta) => {
+    if (userControllingCamera) {
+      return;
+    }
+
     const position = positions[selectedIndex] ?? positions[0];
     const wideScene = selectedIndex < 2 || selectedIndex > positions.length - 3;
     const cameraDistance = wideScene ? 6.7 : 5.9;
@@ -146,6 +155,255 @@ function TimelinePath({
   );
 }
 
+function SelectedNodeEyeButton({
+  position,
+  year,
+  onOpen
+}: {
+  position: NodePosition;
+  year: string;
+  onOpen: () => void;
+}) {
+  return (
+    <Html
+      position={[position[0] + 0.95, 0.2, position[2] + 0.15]}
+      center
+      distanceFactor={8.5}
+      zIndexRange={[40, 20]}
+    >
+      <button
+        type="button"
+        aria-label={`Xem chi tiết ${year}`}
+        title={`Xem chi tiết ${year}`}
+        className="node-eye-button"
+        onClick={(event) => {
+          event.stopPropagation();
+          onOpen();
+        }}
+        onPointerDown={(event) => event.stopPropagation()}
+      >
+        <Eye aria-hidden="true" className="h-4 w-4" />
+      </button>
+    </Html>
+  );
+}
+
+function HumanJourneyAvatar({
+  isChild,
+  isWalking,
+  reducedMotion
+}: {
+  isChild: boolean;
+  isWalking: boolean;
+  reducedMotion: boolean;
+}) {
+  const avatarRef = useRef<THREE.Group>(null);
+  const leftArmRef = useRef<THREE.Mesh>(null);
+  const rightArmRef = useRef<THREE.Mesh>(null);
+  const leftLegRef = useRef<THREE.Mesh>(null);
+  const rightLegRef = useRef<THREE.Mesh>(null);
+
+  useFrame(({ clock }) => {
+    if (!avatarRef.current) {
+      return;
+    }
+
+    const swing = isWalking && !reducedMotion
+      ? Math.sin(clock.elapsedTime * 7.4) * 0.28
+      : 0;
+    const bob = isWalking && !reducedMotion
+      ? Math.abs(Math.sin(clock.elapsedTime * 7.4)) * 0.035
+      : 0;
+
+    avatarRef.current.position.y = bob;
+
+    if (leftArmRef.current) {
+      leftArmRef.current.rotation.z = 0.42 + swing;
+    }
+    if (rightArmRef.current) {
+      rightArmRef.current.rotation.z = -0.42 - swing;
+    }
+    if (leftLegRef.current) {
+      leftLegRef.current.rotation.z = -0.12 - swing * 0.72;
+    }
+    if (rightLegRef.current) {
+      rightLegRef.current.rotation.z = 0.12 + swing * 0.72;
+    }
+  });
+
+  const bodyScale = isChild ? 0.76 : 0.96;
+  const shirtColor = isChild ? "#d8b26b" : "#f4ead7";
+  const lowerColor = isChild ? "#4d3426" : "#1a2533";
+
+  return (
+    <group ref={avatarRef} scale={bodyScale}>
+      <mesh castShadow position={[0, 0.68, 0]}>
+        <sphereGeometry args={[0.16, 28, 18]} />
+        <meshStandardMaterial
+          color="#c79668"
+          roughness={0.64}
+          emissive="#3a241b"
+          emissiveIntensity={0.05}
+        />
+      </mesh>
+      <mesh castShadow position={[0, 0.89, -0.01]} scale={[0.18, 0.08, 0.18]}>
+        <sphereGeometry args={[1, 24, 12]} />
+        <meshStandardMaterial color="#241713" roughness={0.72} />
+      </mesh>
+      <mesh castShadow position={[0, 0.32, 0]} scale={[0.24, 0.36, 0.16]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial
+          color={shirtColor}
+          roughness={0.58}
+          emissive="#c99a4a"
+          emissiveIntensity={isWalking ? 0.08 : 0.02}
+        />
+      </mesh>
+      <mesh
+        ref={leftArmRef}
+        castShadow
+        position={[-0.24, 0.28, 0]}
+        rotation={[0, 0, 0.42]}
+        scale={[0.045, 0.34, 0.045]}
+      >
+        <cylinderGeometry args={[1, 1, 1, 16]} />
+        <meshStandardMaterial color="#c79668" roughness={0.68} />
+      </mesh>
+      <mesh
+        ref={rightArmRef}
+        castShadow
+        position={[0.24, 0.28, 0]}
+        rotation={[0, 0, -0.42]}
+        scale={[0.045, 0.34, 0.045]}
+      >
+        <cylinderGeometry args={[1, 1, 1, 16]} />
+        <meshStandardMaterial color="#c79668" roughness={0.68} />
+      </mesh>
+      <mesh
+        ref={leftLegRef}
+        castShadow
+        position={[-0.09, -0.13, 0]}
+        rotation={[0, 0, -0.12]}
+        scale={[0.055, 0.42, 0.055]}
+      >
+        <cylinderGeometry args={[1, 1, 1, 16]} />
+        <meshStandardMaterial color={lowerColor} roughness={0.62} />
+      </mesh>
+      <mesh
+        ref={rightLegRef}
+        castShadow
+        position={[0.09, -0.13, 0]}
+        rotation={[0, 0, 0.12]}
+        scale={[0.055, 0.42, 0.055]}
+      >
+        <cylinderGeometry args={[1, 1, 1, 16]} />
+        <meshStandardMaterial color={lowerColor} roughness={0.62} />
+      </mesh>
+      <mesh castShadow position={[-0.1, -0.57, 0.03]} scale={[0.12, 0.035, 0.08]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color="#0b1018" roughness={0.6} />
+      </mesh>
+      <mesh castShadow position={[0.1, -0.57, 0.03]} scale={[0.12, 0.035, 0.08]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color="#0b1018" roughness={0.6} />
+      </mesh>
+      {!isChild && (
+        <group position={[0.42, -0.05, 0.03]}>
+          <mesh castShadow scale={[0.18, 0.22, 0.12]}>
+            <boxGeometry args={[1, 1, 1]} />
+            <meshStandardMaterial
+              color="#5c3820"
+              roughness={0.5}
+              metalness={0.08}
+            />
+          </mesh>
+          <mesh castShadow position={[0, 0.16, 0]} scale={[0.12, 0.025, 0.08]}>
+            <boxGeometry args={[1, 1, 1]} />
+            <meshStandardMaterial color="#c99a4a" roughness={0.42} />
+          </mesh>
+        </group>
+      )}
+    </group>
+  );
+}
+
+function JourneyAvatar({
+  positions,
+  selectedIndex,
+  reducedMotion
+}: {
+  positions: NodePosition[];
+  selectedIndex: number;
+  reducedMotion: boolean;
+}) {
+  const isAutoPlaying = useTimelineStore((state) => state.isAutoPlaying);
+  const groupRef = useRef<THREE.Group>(null);
+  const target = useRef(new THREE.Vector3());
+  const initialized = useRef(false);
+
+  useFrame((_, delta) => {
+    const group = groupRef.current;
+    if (!group) {
+      return;
+    }
+
+    const selectedPosition = positions[selectedIndex] ?? positions[0];
+    target.current.set(
+      selectedPosition[0],
+      -0.4,
+      selectedPosition[2] + 1.06
+    );
+
+    if (!initialized.current) {
+      group.position.copy(target.current);
+      initialized.current = true;
+    }
+
+    const before = group.position.clone();
+    const easing = reducedMotion ? 0.34 : 1 - Math.pow(0.018, delta);
+    group.position.lerp(target.current, easing);
+    group.visible = isAutoPlaying;
+
+    const direction = target.current.clone().sub(before);
+    if (direction.lengthSq() > 0.00003) {
+      const targetYaw = Math.atan2(direction.x, direction.z);
+      group.rotation.y = THREE.MathUtils.lerp(
+        group.rotation.y,
+        targetYaw,
+        Math.min(1, delta * 5.4)
+      );
+    }
+  });
+
+  const isChild = selectedIndex === 0;
+
+  return (
+    <group ref={groupRef}>
+      <mesh receiveShadow position={[0, -0.64, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.52, 40]} />
+        <meshStandardMaterial
+          color="#111822"
+          emissive={isChild ? "#f1d37a" : "#c99a4a"}
+          emissiveIntensity={0.22}
+          transparent
+          opacity={0.72}
+        />
+      </mesh>
+      <HumanJourneyAvatar
+        isChild={isChild}
+        isWalking={isAutoPlaying}
+        reducedMotion={reducedMotion}
+      />
+      <pointLight
+        color={isChild ? "#f1d37a" : "#c99a4a"}
+        intensity={isAutoPlaying ? 1.4 : 0.1}
+        distance={2.3}
+        position={[0, 0.55, 0.12]}
+      />
+    </group>
+  );
+}
+
 function JourneyMonument({ reducedMotion }: { reducedMotion: boolean }) {
   const groupRef = useRef<THREE.Group>(null);
 
@@ -205,17 +463,26 @@ function JourneyMonument({ reducedMotion }: { reducedMotion: boolean }) {
   );
 }
 
-function SceneContent() {
+function SceneContent({
+  userControllingCamera
+}: {
+  userControllingCamera: boolean;
+}) {
   const positions = useMemo(() => getNodePositions(), []);
   const selectedEventId = useTimelineStore((state) => state.selectedEventId);
   const reducedMotion = useTimelineStore((state) => state.reducedMotion);
   const selectEvent = useTimelineStore((state) => state.selectEvent);
+  const openDetail = useTimelineStore((state) => state.openDetail);
   const selectedIndex = getTimelineIndex(selectedEventId);
+  const selectedEvent = timelineEvents[selectedIndex] ?? timelineEvents[0];
 
   return (
     <>
       <AutoAdvance />
-      <CameraRig positions={positions} />
+      <CameraRig
+        positions={positions}
+        userControllingCamera={userControllingCamera}
+      />
       <color attach="background" args={["#080b10"]} />
       <fog attach="fog" args={["#080b10", 9, 24]} />
       <ambientLight intensity={0.46} />
@@ -235,13 +502,18 @@ function SceneContent() {
         fade
       />
 
-      <mesh receiveShadow position={[0, -0.94, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[36, 9]} />
-        <meshStandardMaterial color="#0b1018" roughness={0.78} metalness={0.08} />
-      </mesh>
-
       <JourneyMonument reducedMotion={reducedMotion} />
       <TimelinePath
+        positions={positions}
+        selectedIndex={selectedIndex}
+        reducedMotion={reducedMotion}
+      />
+      <SelectedNodeEyeButton
+        position={positions[selectedIndex] ?? positions[0]}
+        year={selectedEvent.year}
+        onOpen={() => openDetail(selectedEvent.id)}
+      />
+      <JourneyAvatar
         positions={positions}
         selectedIndex={selectedIndex}
         reducedMotion={reducedMotion}
@@ -274,8 +546,19 @@ function SceneContent() {
 }
 
 export default function TimelineScene() {
+  const [userControllingCamera, setUserControllingCamera] = useState(false);
+  const resumeCameraTimer = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (resumeCameraTimer.current) {
+        window.clearTimeout(resumeCameraTimer.current);
+      }
+    };
+  }, []);
+
   return (
-    <div className="h-[70vh] min-h-[520px] overflow-hidden border border-white/10 bg-coal shadow-museum lg:h-[calc(100vh-9rem)]">
+    <div className="h-screen min-h-[620px] w-full overflow-hidden bg-coal shadow-museum">
       <Canvas
         shadows
         dpr={[1, 1.45]}
@@ -286,17 +569,32 @@ export default function TimelineScene() {
         }}
       >
         <Suspense fallback={null}>
-          <SceneContent />
+          <SceneContent userControllingCamera={userControllingCamera} />
         </Suspense>
         <OrbitControls
           makeDefault
           enablePan={false}
           enableDamping
-          dampingFactor={0.08}
-          minDistance={4.6}
-          maxDistance={14}
+          dampingFactor={0.045}
+          rotateSpeed={0.56}
+          zoomSpeed={0.78}
+          minDistance={3.6}
+          maxDistance={17}
           maxPolarAngle={Math.PI / 2.05}
           autoRotate={false}
+          onStart={() => {
+            if (resumeCameraTimer.current) {
+              window.clearTimeout(resumeCameraTimer.current);
+              resumeCameraTimer.current = null;
+            }
+            setUserControllingCamera(true);
+          }}
+          onEnd={() => {
+            resumeCameraTimer.current = window.setTimeout(() => {
+              setUserControllingCamera(false);
+              resumeCameraTimer.current = null;
+            }, 1200);
+          }}
         />
       </Canvas>
     </div>

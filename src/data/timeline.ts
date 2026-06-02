@@ -4,6 +4,12 @@ export const phaseMeta: Record<
   TimelinePhase,
   { label: string; accent: string; glow: string; text: string }
 > = {
+  roots: {
+    label: "1890-1911 | Quê hương và tuổi trẻ",
+    accent: "#7aa56d",
+    glow: "#f1d37a",
+    text: "Giai đoạn hình thành nền tảng gia đình, quê hương và nhân cách yêu nước ban đầu."
+  },
   search_path: {
     label: "1911-1920 | Tìm đường",
     accent: "#74b8d8",
@@ -30,6 +36,28 @@ const missingImageNote =
   "Cần bổ sung tư liệu ảnh thật. Không sử dụng ảnh mô phỏng thay tư liệu lịch sử.";
 
 export const timelineEvents: TimelineEvent[] = [
+  {
+    id: "1890-1911-que-huong-nam-dan",
+    year: "1890-1911",
+    title: "Sinh ra và lớn lên tại Nam Đàn, Nghệ An",
+    location: "Kim Liên, Nam Đàn, Nghệ An",
+    phase: "roots",
+    shortDescription:
+      "Nguyễn Sinh Cung sinh ra và lớn lên trong môi trường quê hương, gia đình giàu truyền thống yêu nước.",
+    detail:
+      "Nguyễn Sinh Cung, sau này là Hồ Chí Minh, sinh ngày 19/5/1890 tại quê hương Nghệ An. Những năm tháng tuổi trẻ ở Nam Đàn và trong môi trường gia đình nhà nho yêu nước góp phần nuôi dưỡng lòng yêu nước, ý thức dân tộc và sự quan tâm đến đời sống nhân dân.",
+    ideologicalMeaning:
+      "Đây là nền tảng ban đầu hình thành nhân cách, tình cảm yêu nước và ý thức về vận mệnh dân tộc trước khi Người ra đi tìm đường cứu nước năm 1911.",
+    modelType: "home",
+    images: [
+      {
+        src: "/historical-assets/1890-nha-bac-nam-dan.jpg",
+        caption:
+          "Nhà Bác tại Nam Đàn, Nghệ An - cần bổ sung tư liệu ảnh thật.",
+        sourceNote: missingImageNote
+      }
+    ]
+  },
   {
     id: "1911-ra-di-tim-duong",
     year: "1911",

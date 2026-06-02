@@ -5,10 +5,13 @@ import { getTimelineIndex, timelineEvents } from "@/data/timeline";
 type TimelineState = {
   selectedEventId: string;
   isAutoPlaying: boolean;
+  isDetailOpen: boolean;
   reducedMotion: boolean;
   selectEvent: (id: string) => void;
   nextEvent: () => void;
   previousEvent: () => void;
+  openDetail: (id?: string) => void;
+  closeDetail: () => void;
   setAutoPlaying: (value: boolean) => void;
   setReducedMotion: (value: boolean) => void;
 };
@@ -16,6 +19,7 @@ type TimelineState = {
 export const useTimelineStore = create<TimelineState>((set, get) => ({
   selectedEventId: timelineEvents[0].id,
   isAutoPlaying: false,
+  isDetailOpen: false,
   reducedMotion: false,
   selectEvent: (id) => set({ selectedEventId: id }),
   nextEvent: () => {
@@ -29,6 +33,12 @@ export const useTimelineStore = create<TimelineState>((set, get) => ({
       (currentIndex - 1 + timelineEvents.length) % timelineEvents.length;
     set({ selectedEventId: timelineEvents[previousIndex].id });
   },
+  openDetail: (id) =>
+    set((state) => ({
+      selectedEventId: id ?? state.selectedEventId,
+      isDetailOpen: true
+    })),
+  closeDetail: () => set({ isDetailOpen: false }),
   setAutoPlaying: (value) => set({ isAutoPlaying: value }),
   setReducedMotion: (value) => set({ reducedMotion: value })
 }));

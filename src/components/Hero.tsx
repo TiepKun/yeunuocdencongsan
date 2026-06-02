@@ -17,10 +17,10 @@ export default function Hero() {
             Bảo tàng số 3D
           </div>
           <h1 className="max-w-5xl text-4xl font-semibold leading-tight text-ivory sm:text-5xl lg:text-7xl">
-            Sự hình thành tư tưởng Hồ Chí Minh 1911-1930
+            Sự hình thành tư tưởng Hồ Chí Minh 1890-1930
           </h1>
           <p className="mt-5 max-w-3xl text-base leading-8 text-ivory/78 sm:text-lg">
-            Hành trình từ chủ nghĩa yêu nước đến con đường cách mạng vô sản.
+            Từ quê hương Nam Đàn đến con đường cách mạng vô sản.
           </p>
         </div>
 

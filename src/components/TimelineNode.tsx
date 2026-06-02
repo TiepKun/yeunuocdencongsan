@@ -1,6 +1,6 @@
 "use client";
 
-import { Line, Text } from "@react-three/drei";
+import { Billboard, Line, Text } from "@react-three/drei";
 import { ThreeEvent, useFrame } from "@react-three/fiber";
 import { useMemo, useRef, useState } from "react";
 import * as THREE from "three";
@@ -18,7 +18,7 @@ type TimelineNodeProps = {
   onSelect: (id: string) => void;
 };
 
-type SymbolProps = {
+export type SymbolProps = {
   event: TimelineEvent;
   active: boolean;
 };
@@ -51,6 +51,59 @@ function PaperMaterial({ active }: { active: boolean }) {
       emissiveIntensity={active ? 0.16 : 0.03}
       roughness={0.72}
     />
+  );
+}
+
+function HomeSymbol({ event, active }: SymbolProps) {
+  const phase = phaseMeta[event.phase];
+
+  return (
+    <group>
+      <mesh castShadow position={[0, -0.42, 0]} scale={[1.28, 0.12, 0.74]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <NodeMaterial color="#4a3728" glow={phase.glow} active={active} />
+      </mesh>
+      <mesh castShadow position={[0, -0.08, 0]} scale={[0.96, 0.62, 0.58]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <NodeMaterial color="#8b6f45" glow={phase.glow} active={active} />
+      </mesh>
+      <mesh castShadow position={[0, 0.38, 0]} rotation={[0, 0, Math.PI / 4]} scale={[0.78, 0.78, 0.12]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <NodeMaterial color="#b88b4f" glow={phase.glow} active={active} />
+      </mesh>
+      <mesh castShadow position={[-0.22, -0.18, 0.31]} scale={[0.22, 0.38, 0.04]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <NodeMaterial color="#2b1d16" glow={phase.glow} active={active} />
+      </mesh>
+      <mesh castShadow position={[0.28, -0.06, 0.31]} scale={[0.24, 0.2, 0.04]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <NodeMaterial color="#f4ead7" glow={phase.glow} active={active} />
+      </mesh>
+      <mesh castShadow position={[-0.56, -0.08, 0]} scale={[0.06, 0.72, 0.06]}>
+        <cylinderGeometry args={[1, 1, 1, 12]} />
+        <NodeMaterial color="#6b4b2d" glow={phase.glow} active={active} />
+      </mesh>
+      <mesh castShadow position={[0.56, -0.08, 0]} scale={[0.06, 0.72, 0.06]}>
+        <cylinderGeometry args={[1, 1, 1, 12]} />
+        <NodeMaterial color="#6b4b2d" glow={phase.glow} active={active} />
+      </mesh>
+      <Line
+        points={[
+          [-0.84, -0.57, 0.36],
+          [-0.28, -0.62, 0.38],
+          [0.28, -0.62, 0.38],
+          [0.84, -0.57, 0.36]
+        ]}
+        color={phase.glow}
+        lineWidth={active ? 3 : 1.4}
+      />
+      <pointLight
+        color={phase.glow}
+        intensity={active ? 1.45 : 0.3}
+        distance={2.5}
+        position={[0, 0.35, 0.4]}
+      />
+    </group>
   );
 }
 
@@ -493,8 +546,10 @@ function TorchSymbol({ event, active }: SymbolProps) {
   );
 }
 
-function EventSymbol({ event, active }: SymbolProps) {
+export function EventSymbol({ event, active }: SymbolProps) {
   switch (event.modelType) {
+    case "home":
+      return <HomeSymbol event={event} active={active} />;
     case "ship":
       return <ShipSymbol event={event} active={active} />;
     case "globe":
@@ -605,17 +660,21 @@ export default function TimelineNode({
         />
       </mesh>
       <EventSymbol event={event} active={active} />
-      <Text
-        position={[0, -1.12, 0]}
-        rotation={[-0.32, 0, 0]}
-        fontSize={0.22}
-        color={selected ? phase.glow : "#f4ead7"}
-        anchorX="center"
-        anchorY="middle"
-        maxWidth={1.75}
-      >
-        {event.year}
-      </Text>
+      {selected && (
+        <Billboard position={[0, 1.34, 0]}>
+          <Text
+            fontSize={0.28}
+            color={phase.glow}
+            anchorX="center"
+            anchorY="middle"
+            maxWidth={1.95}
+            outlineWidth={0.012}
+            outlineColor="#080b10"
+          >
+            {event.year}
+          </Text>
+        </Billboard>
+      )}
       <pointLight
         color={phase.glow}
         intensity={active ? 1.3 : 0.18}
