@@ -1,12 +1,12 @@
 "use client";
 
-import { Billboard, Line, Text } from "@react-three/drei";
+import { Billboard, Line, Text, useGLTF } from "@react-three/drei";
 import { ThreeEvent, useFrame } from "@react-three/fiber";
-import { useMemo, useRef, useState } from "react";
+import { Suspense, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 
 import { phaseMeta } from "@/data/timeline";
-import type { TimelineEvent } from "@/types/timeline";
+import type { TimelineEvent, TimelineModel3D } from "@/types/timeline";
 
 export type NodePosition = [number, number, number];
 
@@ -21,6 +21,7 @@ type TimelineNodeProps = {
 export type SymbolProps = {
   event: TimelineEvent;
   active: boolean;
+  modelScope?: "timeline" | "preview";
 };
 
 function NodeMaterial({
@@ -51,6 +52,125 @@ function PaperMaterial({ active }: { active: boolean }) {
       emissiveIntensity={active ? 0.16 : 0.03}
       roughness={0.72}
     />
+  );
+}
+
+function LoadedTimelineModel({
+  model,
+  glow,
+  modelScope
+}: {
+  model: TimelineModel3D;
+  glow: string;
+  modelScope: "timeline" | "preview";
+}) {
+  const src = modelScope === "timeline" ? (model.timelineSrc ?? model.src) : model.src;
+  const { scene } = useGLTF(src);
+  const normalizedScene = useMemo(() => {
+    const sceneClone = scene.clone(true);
+    const fallbackMaterial = new THREE.MeshStandardMaterial({
+      color: "#d7c08a",
+      roughness: 0.58,
+      metalness: 0.03
+    });
+    const box = new THREE.Box3().setFromObject(sceneClone);
+    const size = new THREE.Vector3();
+    const center = new THREE.Vector3();
+
+    box.getSize(size);
+    box.getCenter(center);
+
+    const maxDimension = Math.max(size.x, size.y, size.z) || 1;
+    const fitSize = model.fitSize ?? 1.35;
+    const normalizedScale = fitSize / maxDimension;
+
+    sceneClone.scale.setScalar(normalizedScale);
+    sceneClone.position.set(
+      -center.x * normalizedScale,
+      -box.min.y * normalizedScale - 0.72,
+      -center.z * normalizedScale
+    );
+
+    sceneClone.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.castShadow = false;
+        child.receiveShadow = false;
+        child.frustumCulled = true;
+
+        if (!child.material) {
+          child.material = fallbackMaterial.clone();
+        } else if (Array.isArray(child.material)) {
+          child.material = child.material.map((material) => {
+            material.needsUpdate = true;
+            return material;
+          });
+        } else {
+          child.material.needsUpdate = true;
+        }
+      }
+    });
+
+    return sceneClone;
+  }, [model.fitSize, scene]);
+
+  return (
+    <group
+      position={model.position ?? [0, 0, 0]}
+      rotation={model.rotation ?? [0, 0, 0]}
+      scale={model.scale ?? 1}
+    >
+      <primitive object={normalizedScene} />
+      {modelScope === "preview" && (
+        <>
+          <pointLight
+            color={glow}
+            intensity={0.74}
+            distance={2.1}
+            position={[0, 0.32, 0.28]}
+          />
+          <pointLight
+            color="#f4ead7"
+            intensity={0.26}
+            distance={2.8}
+            position={[-0.7, 0.88, 0.9]}
+          />
+        </>
+      )}
+    </group>
+  );
+}
+
+function EventModels3D({
+  event,
+  active,
+  models,
+  modelScope = "timeline"
+}: SymbolProps & { models: TimelineModel3D[] }) {
+  const phase = phaseMeta[event.phase];
+  const isPreview = modelScope === "preview";
+
+  return (
+    <group>
+      <mesh position={[0, -0.74, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.52, 0.9, isPreview ? 64 : 32]} />
+        <meshStandardMaterial
+          color={phase.glow}
+          emissive={phase.glow}
+          emissiveIntensity={active ? 0.5 : 0.16}
+          transparent
+          opacity={active ? 0.74 : 0.34}
+          side={isPreview ? THREE.DoubleSide : THREE.FrontSide}
+        />
+      </mesh>
+      {models.map((model) => (
+        <LoadedTimelineModel
+          key={model.src}
+          model={model}
+          glow={phase.glow}
+          modelScope={modelScope}
+        />
+      ))}
+    </group>
   );
 }
 
@@ -546,7 +666,7 @@ function TorchSymbol({ event, active }: SymbolProps) {
   );
 }
 
-export function EventSymbol({ event, active }: SymbolProps) {
+function FallbackEventSymbol({ event, active }: SymbolProps) {
   switch (event.modelType) {
     case "home":
       return <HomeSymbol event={event} active={active} />;
@@ -581,6 +701,32 @@ export function EventSymbol({ event, active }: SymbolProps) {
   }
 }
 
+export function EventSymbol({
+  event,
+  active,
+  modelScope = "timeline"
+}: SymbolProps) {
+  const visibleModels =
+    modelScope === "preview"
+      ? event.models3d
+      : event.models3d?.filter((model) => model.showInTimeline !== false);
+
+  if (visibleModels?.length) {
+    return (
+      <Suspense fallback={<FallbackEventSymbol event={event} active={active} />}>
+        <EventModels3D
+          event={event}
+          active={active}
+          models={visibleModels}
+          modelScope={modelScope}
+        />
+      </Suspense>
+    );
+  }
+
+  return <FallbackEventSymbol event={event} active={active} />;
+}
+
 export default function TimelineNode({
   event,
   position,
@@ -592,13 +738,13 @@ export default function TimelineNode({
   const [hovered, setHovered] = useState(false);
   const phase = phaseMeta[event.phase];
 
-  useFrame(({ clock }, delta) => {
+  useFrame((_, delta) => {
     if (!groupRef.current) {
       return;
     }
 
     const group = groupRef.current;
-    const targetScale = selected ? 1.36 : hovered ? 1.1 : 1;
+    const targetScale = selected ? 1.2 : hovered ? 1.06 : 1;
     const nextScale = THREE.MathUtils.lerp(
       group.scale.x,
       targetScale,
@@ -606,20 +752,12 @@ export default function TimelineNode({
     );
     group.scale.setScalar(nextScale);
 
-    const pulse = reducedMotion
-      ? 0
-      : selected
-        ? Math.sin(clock.elapsedTime * 3) * 0.08
-        : hovered
-          ? Math.sin(clock.elapsedTime * 2.2) * 0.035
-          : 0;
-
-    group.position.set(position[0], position[1] + pulse, position[2]);
+    group.position.set(position[0], position[1], position[2]);
     group.rotation.y = reducedMotion
       ? 0
       : THREE.MathUtils.lerp(
           group.rotation.y,
-          selected ? Math.sin(clock.elapsedTime * 1.35) * 0.38 : 0,
+          selected ? 0.16 : 0,
           Math.min(1, delta * 5)
         );
   });
@@ -661,7 +799,7 @@ export default function TimelineNode({
       </mesh>
       <EventSymbol event={event} active={active} />
       {selected && (
-        <Billboard position={[0, 1.34, 0]}>
+        <Billboard position={[0, 1.24, 0]}>
           <Text
             fontSize={0.28}
             color={phase.glow}
@@ -675,11 +813,13 @@ export default function TimelineNode({
           </Text>
         </Billboard>
       )}
-      <pointLight
-        color={phase.glow}
-        intensity={active ? 1.3 : 0.18}
-        distance={2.4}
-      />
+      {active && (
+        <pointLight
+          color={phase.glow}
+          intensity={0.9}
+          distance={2.2}
+        />
+      )}
     </group>
   );
 }

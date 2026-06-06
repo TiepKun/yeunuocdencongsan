@@ -26,6 +26,17 @@ export type TimelineImage = {
   sourceNote: string;
 };
 
+export type TimelineModel3D = {
+  src: string;
+  timelineSrc?: string;
+  label: string;
+  fitSize?: number;
+  showInTimeline?: boolean;
+  position?: [number, number, number];
+  rotation?: [number, number, number];
+  scale?: number;
+};
+
 export type TimelineEvent = {
   id: string;
   year: string;
@@ -36,5 +47,7 @@ export type TimelineEvent = {
   detail: string;
   ideologicalMeaning: string;
   modelType: TimelineModelType;
+  models3d?: TimelineModel3D[];
+  missingModelDescription?: string;
   images: TimelineImage[];
 };

@@ -1,8 +1,7 @@
 "use client";
 
-import { Html, Line, OrbitControls, Preload, Stars } from "@react-three/drei";
+import { Grid, Html, Line, OrbitControls } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Bloom, EffectComposer, Vignette } from "@react-three/postprocessing";
 import { Eye } from "lucide-react";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
@@ -68,11 +67,11 @@ function CameraRig({
 
     const position = positions[selectedIndex] ?? positions[0];
     const wideScene = selectedIndex < 2 || selectedIndex > positions.length - 3;
-    const cameraDistance = wideScene ? 6.7 : 5.9;
+    const cameraDistance = wideScene ? 7.45 : 6.85;
 
     destination.current.set(
       position[0],
-      reducedMotion ? 3.2 : 3.6,
+      reducedMotion ? 3.3 : 3.8,
       position[2] + cameraDistance
     );
     focus.current.set(position[0], 0.15, position[2]);
@@ -101,9 +100,10 @@ function TimelinePath({
   reducedMotion: boolean;
 }) {
   const flowRef = useRef<THREE.Mesh>(null);
+  const isAutoPlaying = useTimelineStore((state) => state.isAutoPlaying);
 
   useFrame(({ clock }) => {
-    if (!flowRef.current || reducedMotion) {
+    if (!flowRef.current || reducedMotion || !isAutoPlaying) {
       return;
     }
 
@@ -406,9 +406,10 @@ function JourneyAvatar({
 
 function JourneyMonument({ reducedMotion }: { reducedMotion: boolean }) {
   const groupRef = useRef<THREE.Group>(null);
+  const isAutoPlaying = useTimelineStore((state) => state.isAutoPlaying);
 
   useFrame(({ clock }, delta) => {
-    if (!groupRef.current || reducedMotion) {
+    if (!groupRef.current || reducedMotion || !isAutoPlaying) {
       return;
     }
 
@@ -463,6 +464,34 @@ function JourneyMonument({ reducedMotion }: { reducedMotion: boolean }) {
   );
 }
 
+function SceneFloor() {
+  return (
+    <group>
+      <mesh receiveShadow position={[0, -0.96, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[46, 15]} />
+        <meshStandardMaterial
+          color="#0a1215"
+          roughness={0.9}
+          metalness={0.02}
+        />
+      </mesh>
+      <Grid
+        position={[0, -0.935, 0]}
+        args={[46, 15]}
+        cellSize={0.78}
+        cellThickness={0.42}
+        cellColor="#24434a"
+        sectionSize={3.9}
+        sectionThickness={0.9}
+        sectionColor="#b78a45"
+        fadeDistance={18}
+        fadeStrength={1.4}
+        infiniteGrid={false}
+      />
+    </group>
+  );
+}
+
 function SceneContent({
   userControllingCamera
 }: {
@@ -483,26 +512,19 @@ function SceneContent({
         positions={positions}
         userControllingCamera={userControllingCamera}
       />
-      <color attach="background" args={["#080b10"]} />
-      <fog attach="fog" args={["#080b10", 9, 24]} />
-      <ambientLight intensity={0.46} />
+      <color attach="background" args={["#080d11"]} />
+      <fog attach="fog" args={["#080d11", 8.4, 23]} />
+      <ambientLight intensity={0.52} />
       <directionalLight
-        castShadow
         position={[3, 6, 6]}
-        intensity={1.65}
+        intensity={1.46}
       />
-      <pointLight color="#c99a4a" position={[-5, 3.4, 2]} intensity={1.8} />
-      <pointLight color="#9f2f2b" position={[5.2, 2.8, -2]} intensity={1.35} />
-      <Stars
-        radius={48}
-        depth={18}
-        count={reducedMotion ? 120 : 420}
-        factor={2.6}
-        saturation={0.2}
-        fade
-      />
+      <pointLight color="#e3b256" position={[-5, 3.4, 2]} intensity={1.28} />
+      <pointLight color="#61c3bf" position={[4.8, 2.8, -2]} intensity={0.54} />
+      <pointLight color="#b94f45" position={[6, 2.4, 3]} intensity={0.42} />
 
       <JourneyMonument reducedMotion={reducedMotion} />
+      <SceneFloor />
       <TimelinePath
         positions={positions}
         selectedIndex={selectedIndex}
@@ -530,17 +552,6 @@ function SceneContent({
         />
       ))}
 
-      {!reducedMotion && (
-        <EffectComposer multisampling={0}>
-          <Bloom
-            intensity={0.46}
-            luminanceThreshold={0.34}
-            luminanceSmoothing={0.36}
-          />
-          <Vignette darkness={0.72} offset={0.24} />
-        </EffectComposer>
-      )}
-      <Preload all />
     </>
   );
 }
@@ -560,9 +571,8 @@ export default function TimelineScene() {
   return (
     <div className="h-screen min-h-[620px] w-full overflow-hidden bg-coal shadow-museum">
       <Canvas
-        shadows
-        dpr={[1, 1.45]}
-        camera={{ position: [0, 4.2, 11], fov: 46, near: 0.1, far: 80 }}
+        dpr={[1, 1.15]}
+        camera={{ position: [0, 4.2, 11], fov: 50, near: 0.1, far: 80 }}
         gl={{
           antialias: true,
           powerPreference: "high-performance"

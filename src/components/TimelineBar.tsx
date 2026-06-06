@@ -49,7 +49,7 @@ export default function TimelineBar() {
   };
 
   return (
-    <section className="glass-panel px-4 py-5 text-ivory">
+    <section className="glass-panel timeline-panel px-4 py-5 text-ivory">
       <div className="mb-4 flex items-center justify-between gap-3">
         <h2 className="text-sm font-black uppercase tracking-[0.18em] text-brass">
           Timeline 2D
@@ -86,7 +86,7 @@ export default function TimelineBar() {
         }}
       >
         <div className="relative flex min-w-[1180px] items-stretch gap-3 pr-2">
-          <div className="absolute left-5 right-5 top-5 h-px bg-gradient-to-r from-[#7aa56d] via-[#ffd36a] to-[#9f2f2b]" />
+          <div className="absolute left-5 right-5 top-5 h-px bg-gradient-to-r from-[#7fb98f] via-[#f2c96a] to-[#a93f42]" />
           {timelineEvents.map((event) => {
             const selected = event.id === selectedEventId;
             const phase = phaseMeta[event.phase];
@@ -103,7 +103,7 @@ export default function TimelineBar() {
                   className="h-9 w-9 rounded-full border transition"
                   style={{
                     borderColor: selected ? phase.glow : `${phase.accent}88`,
-                    backgroundColor: selected ? phase.glow : "#0b1118",
+                    backgroundColor: selected ? phase.glow : "#091219",
                     boxShadow: selected
                       ? `0 0 26px ${phase.glow}88`
                       : `0 0 14px ${phase.accent}33`
@@ -112,9 +112,18 @@ export default function TimelineBar() {
                 <span
                   className={`min-h-20 w-full rounded-lg border px-2 py-3 transition ${
                     selected
-                      ? "border-brass bg-brass/15 text-ivory"
-                      : "border-white/10 bg-black/20 text-ivory/62 hover:border-brass/50 hover:text-ivory"
+                      ? "text-ivory"
+                      : "text-ivory/68 hover:text-ivory"
                   }`}
+                  style={{
+                    borderColor: selected ? phase.glow : `${phase.accent}44`,
+                    background: selected
+                      ? `linear-gradient(180deg, ${phase.accent}38, rgba(7, 13, 17, 0.9))`
+                      : "linear-gradient(180deg, rgba(10, 18, 23, 0.82), rgba(5, 9, 13, 0.72))",
+                    boxShadow: selected
+                      ? `0 16px 34px ${phase.accent}26, inset 0 1px 0 rgba(244, 234, 215, 0.12)`
+                      : "inset 0 1px 0 rgba(244, 234, 215, 0.05)"
+                  }}
                 >
                   <span className="block text-sm font-black">
                     {event.year}

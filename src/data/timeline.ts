@@ -6,32 +6,33 @@ export const phaseMeta: Record<
 > = {
   roots: {
     label: "1890-1911 | Quê hương và tuổi trẻ",
-    accent: "#7aa56d",
-    glow: "#f1d37a",
+    accent: "#7fb98f",
+    glow: "#f4d77b",
     text: "Giai đoạn hình thành nền tảng gia đình, quê hương và nhân cách yêu nước ban đầu."
   },
   search_path: {
     label: "1911-1920 | Tìm đường",
-    accent: "#74b8d8",
-    glow: "#f1d37a",
+    accent: "#63c3c0",
+    glow: "#f2c96a",
     text: "Giai đoạn tìm tòi con đường cứu nước, giải phóng dân tộc."
   },
   ideological_turning_point: {
     label: "1920 | Bước ngoặt tư tưởng",
-    accent: "#d64536",
+    accent: "#c84e45",
     glow: "#ffd36a",
     text: "Bước chuyển từ chủ nghĩa yêu nước sang lập trường Mác-Lênin."
   },
   formation: {
     label: "1921-1930 | Hình thành cơ bản",
-    accent: "#9f2f2b",
-    glow: "#c99a4a",
+    accent: "#a93f42",
+    glow: "#d8a850",
     text: "Giai đoạn hình thành cơ bản tư tưởng về cách mạng Việt Nam."
   }
 };
 
 const sourceNote =
-  "Theo giáo trình Tư tưởng Hồ Chí Minh và tư liệu ảnh được cung cấp.";
+  "Tư liệu ảnh trích từ file 1890 1922.docx do người dùng cung cấp.";
+const providedImageNote = "Tư liệu ảnh do người dùng cung cấp.";
 const missingImageNote =
   "Cần bổ sung tư liệu ảnh thật. Không sử dụng ảnh mô phỏng thay tư liệu lịch sử.";
 
@@ -49,12 +50,20 @@ export const timelineEvents: TimelineEvent[] = [
     ideologicalMeaning:
       "Đây là nền tảng ban đầu hình thành nhân cách, tình cảm yêu nước và ý thức về vận mệnh dân tộc trước khi Người ra đi tìm đường cứu nước năm 1911.",
     modelType: "home",
+    models3d: [
+      {
+        src: "/models/optimized/Nha-Bac-Nam-Dan-optimized.glb",
+        timelineSrc: "/models/timeline/Nha-Bac-Nam-Dan-timeline.glb",
+        label: "Nhà Bác tại Nam Đàn",
+        fitSize: 1.52,
+        rotation: [0, -0.28, 0]
+      }
+    ],
     images: [
       {
         src: "/historical-assets/1890-nha-bac-nam-dan.jpg",
-        caption:
-          "Nhà Bác tại Nam Đàn, Nghệ An - cần bổ sung tư liệu ảnh thật.",
-        sourceNote: missingImageNote
+        caption: "Nhà Bác tại Nam Đàn, Nghệ An.",
+        sourceNote
       }
     ]
   },
@@ -71,12 +80,36 @@ export const timelineEvents: TimelineEvent[] = [
     ideologicalMeaning:
       "Mở đầu quá trình khảo nghiệm độc lập, đặt nền cho việc tìm một con đường giải phóng dân tộc khác với các khuynh hướng cứu nước trước đó.",
     modelType: "ship",
+    models3d: [
+      {
+        src: "/models/optimized/Latouche-Treville-optimized.glb",
+        timelineSrc: "/models/timeline/Latouche-Treville-timeline.glb",
+        label: "Tàu Latouche-Tréville",
+        fitSize: 1.7,
+        position: [0.02, -0.03, 0],
+        rotation: [0, -0.48, 0]
+      },
+      {
+        src: "/models/optimized/Nguyen-Tat-Thanh-1911-optimized.glb",
+        timelineSrc: "/models/timeline/Nguyen-Tat-Thanh-1911-timeline.glb",
+        label: "Nguyễn Tất Thành năm 1911",
+        fitSize: 0.95,
+        position: [-0.52, -0.02, 0.3],
+        rotation: [0, 0.3, 0],
+        scale: 0.72
+      }
+    ],
     images: [
       {
         src: "/historical-assets/1911-anh-ba-nguyen-tat-thanh.jpg",
+        caption: "Anh Ba Nguyễn Tất Thành trong giai đoạn ra đi tìm đường cứu nước.",
+        sourceNote
+      },
+      {
+        src: "/historical-assets/1911-ben-nha-rong.jpg",
         caption:
-          "Anh Ba Nguyễn Tất Thành năm 1911 - cần bổ sung tư liệu ảnh thật.",
-        sourceNote: missingImageNote
+          "Tư liệu minh họa hành trình từ Bến Nhà Rồng trên tàu Latouche-Tréville năm 1911.",
+        sourceNote
       }
     ]
   },
@@ -93,11 +126,14 @@ export const timelineEvents: TimelineEvent[] = [
     ideologicalMeaning:
       "Những trải nghiệm trực tiếp giúp Người nhận thấy sự áp bức của chủ nghĩa thực dân có tính quốc tế, từ đó mở rộng chủ nghĩa yêu nước thành ý thức liên hệ với phong trào giải phóng các dân tộc bị áp bức.",
     modelType: "globe",
+    missingModelDescription:
+      "Cần GLB mô tả hành trình khảo sát nhiều châu lục 1911-1917, ví dụ bản đồ thế giới 3D có tuyến đường, cảng biển hoặc hình tượng người lao động thuộc địa.",
     images: [
       {
-        src: "/historical-assets/placeholder.jpg",
-        caption: "Cần bổ sung tư liệu ảnh về hành trình khảo sát 1911-1917.",
-        sourceNote: missingImageNote
+        src: "/historical-assets/1911-1917-hanh-trinh-the-gioi.png",
+        caption:
+          "Bản đồ hành trình khảo sát thế giới của Nguyễn Tất Thành giai đoạn 1911-1917.",
+        sourceNote
       }
     ]
   },
@@ -114,11 +150,27 @@ export const timelineEvents: TimelineEvent[] = [
     ideologicalMeaning:
       "Tư tưởng yêu nước được mở rộng theo hướng gắn vấn đề dân tộc Việt Nam với phong trào tiến bộ và phong trào công nhân quốc tế.",
     modelType: "paris",
+    models3d: [
+      {
+        src: "/models/optimized/Eiffel_Tower-optimized.glb",
+        timelineSrc: "/models/timeline/Eiffel_Tower-timeline.glb",
+        label: "Tháp Eiffel - Paris",
+        fitSize: 1.52,
+        position: [0, -0.04, 0],
+        rotation: [0, 0.22, 0]
+      }
+    ],
     images: [
       {
-        src: "/historical-assets/placeholder.jpg",
-        caption: "Cần bổ sung tư liệu ảnh về hoạt động ở Pháp 1917-1919.",
-        sourceNote: missingImageNote
+        src: "/historical-assets/1919-the-can-cuoc-paris.jpg",
+        caption: "Thẻ căn cước của Nguyễn Ái Quốc ở Paris năm 1919.",
+        sourceNote
+      },
+      {
+        src: "/historical-assets/1919-nha-compoint-paris.jpg",
+        caption:
+          "Ngôi nhà số 9, ngõ Compoint, nơi Nguyễn Ái Quốc từng ở trong thời gian hoạt động tại Pháp.",
+        sourceNote
       }
     ]
   },
@@ -135,17 +187,18 @@ export const timelineEvents: TimelineEvent[] = [
     ideologicalMeaning:
       "Sự kiện thể hiện bước trưởng thành trong đấu tranh chính trị công khai, đưa vấn đề quyền dân tộc của Việt Nam ra trước dư luận quốc tế.",
     modelType: "document",
+    missingModelDescription:
+      "Cần GLB về Bản yêu sách của nhân dân Việt Nam hoặc bối cảnh Hội nghị Versailles năm 1919.",
     images: [
       {
         src: "/historical-assets/1919-versailles.jpg",
-        caption: "Hội nghị Versailles 1919 - cần bổ sung tư liệu ảnh thật.",
-        sourceNote: missingImageNote
+        caption: "Quang cảnh Hội nghị Versailles năm 1919.",
+        sourceNote
       },
       {
         src: "/historical-assets/1919-ban-yeu-sach.jpg",
-        caption:
-          "Bản yêu sách của nhân dân Việt Nam - cần bổ sung tư liệu ảnh thật.",
-        sourceNote: missingImageNote
+        caption: "Bản yêu sách của nhân dân Việt Nam gửi tới Hội nghị Versailles.",
+        sourceNote
       }
     ]
   },
@@ -162,12 +215,36 @@ export const timelineEvents: TimelineEvent[] = [
     ideologicalMeaning:
       "Đánh dấu sự chuyển biến từ chủ nghĩa yêu nước sang lập trường Mác-Lênin, đặt nền tảng cho tư tưởng độc lập dân tộc gắn liền với chủ nghĩa xã hội.",
     modelType: "book",
+    models3d: [
+      {
+        src: "/models/optimized/Lenin-tren-buc-phat-bieu-optimized.glb",
+        timelineSrc: "/models/timeline/Lenin-tren-buc-phat-bieu-timeline.glb",
+        label: "Lênin trên bục phát biểu",
+        fitSize: 1.38,
+        rotation: [0, -0.22, 0]
+      }
+    ],
     images: [
       {
         src: "/historical-assets/1920-luan-cuong-lenin.jpg",
         caption:
-          "Sơ thảo Luận cương về vấn đề dân tộc và thuộc địa - cần bổ sung tư liệu ảnh thật.",
-        sourceNote: missingImageNote
+          "Tư liệu báo L'Humanité năm 1920, bối cảnh Nguyễn Ái Quốc tiếp cận tư tưởng của Lênin.",
+        sourceNote
+      },
+      {
+        src: "/historical-assets/1920-lhumanite-trang-2.jpg",
+        caption: "Tư liệu báo L'Humanité năm 1920 - trang 2.",
+        sourceNote
+      },
+      {
+        src: "/historical-assets/1920-lhumanite-trang-3.jpg",
+        caption: "Tư liệu báo L'Humanité năm 1920 - trang 3.",
+        sourceNote
+      },
+      {
+        src: "/historical-assets/1920-lhumanite-trang-4.jpg",
+        caption: "Tư liệu báo L'Humanité năm 1920 - trang 4.",
+        sourceNote
       }
     ]
   },
@@ -184,12 +261,20 @@ export const timelineEvents: TimelineEvent[] = [
     ideologicalMeaning:
       "Từ một người yêu nước chống thực dân, Nguyễn Ái Quốc trở thành chiến sĩ cộng sản, xác lập cơ sở chính trị cho con đường giải phóng dân tộc theo cách mạng vô sản.",
     modelType: "congress",
+    models3d: [
+      {
+        src: "/models/optimized/Bac-tai-Phap-1920-optimized.glb",
+        timelineSrc: "/models/timeline/Bac-tai-Phap-1920-timeline.glb",
+        label: "Nguyễn Ái Quốc tại Pháp năm 1920",
+        fitSize: 1.28,
+        rotation: [0, -0.18, 0]
+      }
+    ],
     images: [
       {
         src: "/historical-assets/1920-dai-hoi-tours.jpg",
-        caption:
-          "Nguyễn Ái Quốc tại Đại hội Tours - cần bổ sung tư liệu ảnh thật.",
-        sourceNote: missingImageNote
+        caption: "Nguyễn Ái Quốc tại Đại hội Tours năm 1920.",
+        sourceNote
       }
     ]
   },
@@ -206,11 +291,25 @@ export const timelineEvents: TimelineEvent[] = [
     ideologicalMeaning:
       "Góp phần hình thành tư tưởng gắn cách mạng thuộc địa với phong trào cách mạng vô sản, đồng thời khẳng định vai trò tuyên truyền, giác ngộ quần chúng.",
     modelType: "newspaper",
+    models3d: [
+      {
+        src: "/models/optimized/la%20peria-optimized.glb",
+        timelineSrc: "/models/timeline/la%20peria-timeline.glb",
+        label: "Báo Le Paria",
+        fitSize: 1.18,
+        rotation: [0, 0.2, 0]
+      }
+    ],
     images: [
       {
         src: "/historical-assets/1922-le-paria.jpg",
-        caption: "Báo Le Paria năm 1922 - cần bổ sung tư liệu ảnh thật.",
-        sourceNote: missingImageNote
+        caption: "Báo Le Paria, số ra ngày 01/5/1922.",
+        sourceNote
+      },
+      {
+        src: "/historical-assets/1922-le-paria-so-5.jpg",
+        caption: "Báo Le Paria, số ra ngày 01/8/1922.",
+        sourceNote
       }
     ]
   },
@@ -227,11 +326,14 @@ export const timelineEvents: TimelineEvent[] = [
     ideologicalMeaning:
       "Củng cố cơ sở lý luận Mác-Lênin cho tư tưởng về cách mạng giải phóng dân tộc, nhất là quan hệ giữa vấn đề dân tộc và cách mạng vô sản.",
     modelType: "soviet",
+    missingModelDescription:
+      "Cần GLB mô tả hoạt động ở Liên Xô 1923-1924, ví dụ tòa nhà Quốc tế Cộng sản, hội trường học tập hoặc biểu tượng Moscow thời kỳ này.",
     images: [
       {
-        src: "/historical-assets/placeholder.jpg",
-        caption: "Cần bổ sung tư liệu ảnh về hoạt động ở Liên Xô 1923-1924.",
-        sourceNote: missingImageNote
+        src: "/historical-assets/1923-1924-lien-xo-quoc-te-cong-san.jpg",
+        caption:
+          "Nguyễn Ái Quốc trong thời gian hoạt động, học tập và tiếp xúc với phong trào cộng sản quốc tế tại Liên Xô.",
+        sourceNote: providedImageNote
       }
     ]
   },
@@ -248,11 +350,14 @@ export const timelineEvents: TimelineEvent[] = [
     ideologicalMeaning:
       "Khẳng định tư tưởng cách mạng là sự nghiệp của quần chúng, cần có tổ chức cách mạng và đội ngũ cán bộ được giáo dục bằng lý luận tiên tiến.",
     modelType: "training",
+    missingModelDescription:
+      "Cần GLB mô tả hoạt động huấn luyện, lớp học chính trị hoặc cơ sở cách mạng tại Trung Quốc giai đoạn 1924-1927.",
     images: [
       {
-        src: "/historical-assets/placeholder.jpg",
-        caption: "Cần bổ sung tư liệu ảnh về hoạt động ở Trung Quốc 1924-1927.",
-        sourceNote: missingImageNote
+        src: "/historical-assets/1924-1927-lop-huan-luyen-quang-chau.webp",
+        caption:
+          "Lớp huấn luyện chính trị ở Quảng Châu, gắn với quá trình chuẩn bị cán bộ và tổ chức cho cách mạng Việt Nam.",
+        sourceNote: providedImageNote
       }
     ]
   },
@@ -269,12 +374,19 @@ export const timelineEvents: TimelineEvent[] = [
     ideologicalMeaning:
       "Làm sâu sắc tư tưởng chống chủ nghĩa thực dân, đồng thời củng cố quan điểm giải phóng dân tộc phải gắn với phong trào cách mạng tiến bộ trên thế giới.",
     modelType: "justice_book",
+    missingModelDescription:
+      "Cần GLB về tác phẩm Bản án chế độ thực dân Pháp, có thể là mô hình sách/tài liệu với bố cục tố cáo chủ nghĩa thực dân.",
     images: [
       {
-        src: "/historical-assets/placeholder.jpg",
+        src: "/historical-assets/1925-ban-an-che-do-thuc-dan-phap.jpg",
+        caption: "Bìa tác phẩm Bản án chế độ thực dân Pháp.",
+        sourceNote
+      },
+      {
+        src: "/historical-assets/1925-ban-an-che-do-thuc-dan-phap-ban-mo.jpg",
         caption:
-          "Cần bổ sung tư liệu ảnh về Bản án chế độ thực dân Pháp năm 1925.",
-        sourceNote: missingImageNote
+          "Tư liệu bản sách Bản án chế độ thực dân Pháp của Nguyễn Ái Quốc.",
+        sourceNote: providedImageNote
       }
     ]
   },
@@ -291,11 +403,13 @@ export const timelineEvents: TimelineEvent[] = [
     ideologicalMeaning:
       "Góp phần hình thành tư tưởng về con đường cách mạng Việt Nam: có Đảng lãnh đạo, lấy quần chúng làm gốc, kết hợp độc lập dân tộc với mục tiêu xã hội chủ nghĩa.",
     modelType: "road_book",
+    missingModelDescription:
+      "Cần GLB về tác phẩm Đường Kách mệnh năm 1927 hoặc mô hình sách/tài liệu huấn luyện cán bộ cách mạng.",
     images: [
       {
-        src: "/historical-assets/placeholder.jpg",
-        caption: "Cần bổ sung tư liệu ảnh về tác phẩm Đường Kách mệnh năm 1927.",
-        sourceNote: missingImageNote
+        src: "/historical-assets/1927-duong-kach-menh.jpg",
+        caption: "Tác phẩm Đường Kách mệnh, xuất bản năm 1927.",
+        sourceNote: providedImageNote
       }
     ]
   },
@@ -312,11 +426,14 @@ export const timelineEvents: TimelineEvent[] = [
     ideologicalMeaning:
       "Thể hiện tư tưởng đoàn kết dân tộc gắn với đoàn kết quốc tế, đồng thời nhấn mạnh tinh thần tự lực, tự cường trong tổ chức lực lượng cách mạng.",
     modelType: "community",
+    missingModelDescription:
+      "Cần GLB mô tả hoạt động vận động cộng đồng người Việt ở Thái Lan giai đoạn 1928-1929.",
     images: [
       {
-        src: "/historical-assets/placeholder.jpg",
-        caption: "Cần bổ sung tư liệu ảnh về hoạt động ở Thái Lan 1928-1929.",
-        sourceNote: missingImageNote
+        src: "/historical-assets/1928-1929-hoat-dong-thai-lan.webp",
+        caption:
+          "Tư liệu về hoạt động vận động, tổ chức trong cộng đồng người Việt ở Thái Lan giai đoạn 1928-1929.",
+        sourceNote: providedImageNote
       }
     ]
   },
@@ -333,12 +450,21 @@ export const timelineEvents: TimelineEvent[] = [
     ideologicalMeaning:
       "Kết tinh quá trình hình thành tư tưởng về con đường cách mạng Việt Nam: giải phóng dân tộc theo cách mạng vô sản, độc lập dân tộc gắn với chủ nghĩa xã hội, có Đảng cách mạng lãnh đạo và dựa vào sức mạnh quần chúng.",
     modelType: "torch",
+    models3d: [
+      {
+        src: "/models/optimized/Hop-thanh-lap-Dang-optimized.glb",
+        timelineSrc: "/models/timeline/Hop-thanh-lap-Dang-timeline.glb",
+        label: "Hội nghị thành lập Đảng",
+        fitSize: 1.42,
+        rotation: [0, -0.28, 0]
+      }
+    ],
     images: [
       {
-        src: "/historical-assets/placeholder.jpg",
+        src: "/historical-assets/1930-hoi-nghi-thanh-lap-dang.jpg",
         caption:
-          "Cần bổ sung tư liệu ảnh về sự kiện thành lập Đảng Cộng sản Việt Nam.",
-        sourceNote: missingImageNote
+          "Tranh tư liệu minh họa Hội nghị thành lập Đảng Cộng sản Việt Nam năm 1930.",
+        sourceNote: providedImageNote
       }
     ]
   }

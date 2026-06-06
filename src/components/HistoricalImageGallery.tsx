@@ -33,7 +33,8 @@ export default function HistoricalImageGallery({
               width={1600}
               height={1000}
               loading="lazy"
-              className="aspect-[16/10] w-full object-cover"
+              sizes="(min-width: 640px) 520px, 92vw"
+              className="max-h-[460px] w-full bg-black/30 object-contain"
               onError={() => {
                 if (image.src !== fallbackSrc) {
                   setFailedImages((current) => ({

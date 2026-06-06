@@ -105,6 +105,24 @@ export default function DetailPanel() {
 
               <section className="space-y-3 border-t border-white/10 pt-4">
                 <h3 className="text-sm font-semibold text-brass">
+                  Mô hình 3D
+                </h3>
+                {event.models3d?.length ? (
+                  <ul className="list-disc space-y-1 pl-5 text-sm leading-6 text-ivory/72">
+                    {event.models3d.map((model) => (
+                      <li key={model.src}>{model.label}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm leading-7 text-ivory/70">
+                    {event.missingModelDescription ??
+                      "Chưa có mô hình GLB tương ứng cho giai đoạn này."}
+                  </p>
+                )}
+              </section>
+
+              <section className="space-y-3 border-t border-white/10 pt-4">
+                <h3 className="text-sm font-semibold text-brass">
                   Tư liệu ảnh
                 </h3>
                 <HistoricalImageGallery images={event.images} />
