@@ -1,8 +1,8 @@
 "use client";
 
 import { Billboard, Line, Text, useGLTF } from "@react-three/drei";
-import { ThreeEvent, useFrame } from "@react-three/fiber";
-import { Suspense, useMemo, useRef, useState } from "react";
+import { ThreeEvent, useFrame, useThree } from "@react-three/fiber";
+import { memo, Suspense, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 
 import { phaseMeta } from "@/data/timeline";
@@ -757,7 +757,7 @@ export function EventSymbol({
   return <FallbackEventSymbol event={event} active={active} />;
 }
 
-export default function TimelineNode({
+function TimelineNode({
   event,
   position,
   selected,
@@ -767,6 +767,7 @@ export default function TimelineNode({
 }: TimelineNodeProps) {
   const groupRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
+  const invalidate = useThree((state) => state.invalidate);
   const phase = phaseMeta[event.phase];
 
   useFrame((_, delta) => {
@@ -776,10 +777,11 @@ export default function TimelineNode({
 
     const group = groupRef.current;
     const targetScale = selected ? 1.2 : hovered ? 1.06 : 1;
+    const targetRotation = selected ? 0.16 : 0;
     const nextScale = THREE.MathUtils.lerp(
       group.scale.x,
       targetScale,
-      reducedMotion ? 0.35 : 0.12
+      reducedMotion ? 0.6 : 0.24
     );
     group.scale.setScalar(nextScale);
 
@@ -788,9 +790,17 @@ export default function TimelineNode({
       ? 0
       : THREE.MathUtils.lerp(
           group.rotation.y,
-          selected ? 0.16 : 0,
-          Math.min(1, delta * 5)
+          targetRotation,
+          Math.min(1, delta * 12)
         );
+
+    const scaleMoving = Math.abs(group.scale.x - targetScale) > 0.002;
+    const rotationMoving =
+      !reducedMotion && Math.abs(group.rotation.y - targetRotation) > 0.002;
+
+    if (scaleMoving || rotationMoving) {
+      invalidate();
+    }
   });
 
   const handlePointerOver = (eventPointer: ThreeEvent<PointerEvent>) => {
@@ -858,3 +868,5 @@ export default function TimelineNode({
     </group>
   );
 }
+
+export default memo(TimelineNode);

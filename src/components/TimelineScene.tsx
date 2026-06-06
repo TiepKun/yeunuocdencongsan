@@ -12,6 +12,7 @@ import { useTimelineStore } from "@/store/useTimelineStore";
 import TimelineNode, { type NodePosition } from "./TimelineNode";
 
 const AUTO_ADVANCE_DELAY_MS = 10000;
+const TIMELINE_MODEL_IDLE_DELAY_MS = 2400;
 const MUSEUM_BAYS = Array.from({ length: 9 }, (_, index) => (index - 4) * 4);
 
 function getNodePositions(): NodePosition[] {
@@ -51,6 +52,7 @@ function CameraRig({
   const selectedEventId = useTimelineStore((state) => state.selectedEventId);
   const reducedMotion = useTimelineStore((state) => state.reducedMotion);
   const { camera } = useThree();
+  const invalidate = useThree((state) => state.invalidate);
   const controls = useThree(
     (state) =>
       (state as unknown as {
@@ -77,7 +79,7 @@ function CameraRig({
     );
     focus.current.set(position[0], 0.15, position[2]);
 
-    const easing = reducedMotion ? 0.22 : 1 - Math.pow(0.025, delta);
+    const easing = reducedMotion ? 0.48 : Math.min(1, delta * 12);
     camera.position.lerp(destination.current, easing);
 
     if (controls) {
@@ -85,6 +87,15 @@ function CameraRig({
       controls.update();
     } else {
       camera.lookAt(focus.current);
+    }
+
+    const cameraMoving = camera.position.distanceToSquared(destination.current) > 0.0004;
+    const focusMoving = controls
+      ? controls.target.distanceToSquared(focus.current) > 0.0004
+      : false;
+
+    if (cameraMoving || focusMoving) {
+      invalidate();
     }
   });
 
@@ -102,6 +113,7 @@ function TimelinePath({
 }) {
   const flowRef = useRef<THREE.Mesh>(null);
   const isAutoPlaying = useTimelineStore((state) => state.isAutoPlaying);
+  const invalidate = useThree((state) => state.invalidate);
 
   useFrame(({ clock }) => {
     if (!flowRef.current || reducedMotion || !isAutoPlaying) {
@@ -120,6 +132,7 @@ function TimelinePath({
       0.02,
       THREE.MathUtils.lerp(start[2], end[2], localProgress)
     );
+    invalidate();
   });
 
   return (
@@ -203,6 +216,7 @@ function HumanJourneyAvatar({
   const rightArmRef = useRef<THREE.Mesh>(null);
   const leftLegRef = useRef<THREE.Mesh>(null);
   const rightLegRef = useRef<THREE.Mesh>(null);
+  const invalidate = useThree((state) => state.invalidate);
 
   useFrame(({ clock }) => {
     if (!avatarRef.current) {
@@ -229,6 +243,10 @@ function HumanJourneyAvatar({
     }
     if (rightLegRef.current) {
       rightLegRef.current.rotation.z = 0.12 + swing * 0.72;
+    }
+
+    if (isWalking && !reducedMotion) {
+      invalidate();
     }
   });
 
@@ -340,7 +358,10 @@ function JourneyAvatar({
   const isAutoPlaying = useTimelineStore((state) => state.isAutoPlaying);
   const groupRef = useRef<THREE.Group>(null);
   const target = useRef(new THREE.Vector3());
+  const previous = useRef(new THREE.Vector3());
+  const direction = useRef(new THREE.Vector3());
   const initialized = useRef(false);
+  const invalidate = useThree((state) => state.invalidate);
 
   useFrame((_, delta) => {
     const group = groupRef.current;
@@ -360,19 +381,29 @@ function JourneyAvatar({
       initialized.current = true;
     }
 
-    const before = group.position.clone();
+    if (!isAutoPlaying) {
+      group.visible = false;
+      group.position.copy(target.current);
+      return;
+    }
+
+    previous.current.copy(group.position);
     const easing = reducedMotion ? 0.34 : 1 - Math.pow(0.018, delta);
     group.position.lerp(target.current, easing);
     group.visible = isAutoPlaying;
 
-    const direction = target.current.clone().sub(before);
-    if (direction.lengthSq() > 0.00003) {
-      const targetYaw = Math.atan2(direction.x, direction.z);
+    direction.current.subVectors(target.current, previous.current);
+    if (direction.current.lengthSq() > 0.00003) {
+      const targetYaw = Math.atan2(direction.current.x, direction.current.z);
       group.rotation.y = THREE.MathUtils.lerp(
         group.rotation.y,
         targetYaw,
         Math.min(1, delta * 5.4)
       );
+    }
+
+    if (isAutoPlaying || group.position.distanceToSquared(target.current) > 0.0004) {
+      invalidate();
     }
   });
 
@@ -408,6 +439,7 @@ function JourneyAvatar({
 function JourneyMonument({ reducedMotion }: { reducedMotion: boolean }) {
   const groupRef = useRef<THREE.Group>(null);
   const isAutoPlaying = useTimelineStore((state) => state.isAutoPlaying);
+  const invalidate = useThree((state) => state.invalidate);
 
   useFrame(({ clock }, delta) => {
     if (!groupRef.current || reducedMotion || !isAutoPlaying) {
@@ -416,6 +448,7 @@ function JourneyMonument({ reducedMotion }: { reducedMotion: boolean }) {
 
     groupRef.current.rotation.y += delta * 0.12;
     groupRef.current.position.y = 1.3 + Math.sin(clock.elapsedTime * 0.8) * 0.04;
+    invalidate();
   });
 
   return (
@@ -612,10 +645,28 @@ function SceneContent({
   const reducedMotion = useTimelineStore((state) => state.reducedMotion);
   const selectEvent = useTimelineStore((state) => state.selectEvent);
   const openDetail = useTimelineStore((state) => state.openDetail);
+  const isAutoPlaying = useTimelineStore((state) => state.isAutoPlaying);
   const theme = useTimelineStore((state) => state.theme);
+  const [modelReadyEventId, setModelReadyEventId] = useState<string | null>(null);
   const selectedIndex = getTimelineIndex(selectedEventId);
   const selectedEvent = timelineEvents[selectedIndex] ?? timelineEvents[0];
   const isLight = theme === "light";
+  const timelineModelReady =
+    !isAutoPlaying &&
+    !userControllingCamera &&
+    modelReadyEventId === selectedEventId;
+
+  useEffect(() => {
+    if (isAutoPlaying || userControllingCamera) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setModelReadyEventId(selectedEventId);
+    }, TIMELINE_MODEL_IDLE_DELAY_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [isAutoPlaying, selectedEventId, userControllingCamera]);
 
   return (
     <>
@@ -680,7 +731,7 @@ function SceneContent({
           event={event}
           position={positions[index]}
           selected={event.id === selectedEventId}
-          loadModel={Math.abs(index - selectedIndex) <= 1}
+          loadModel={timelineModelReady && index === selectedIndex}
           reducedMotion={reducedMotion}
           onSelect={selectEvent}
         />
@@ -714,7 +765,8 @@ export default function TimelineScene() {
         </span>
       </div>
       <Canvas
-        dpr={[1, 1.15]}
+        dpr={[0.8, 1]}
+        frameloop="demand"
         camera={{ position: [0, 3.35, 8.8], fov: 46, near: 0.1, far: 80 }}
         gl={{
           antialias: true,
