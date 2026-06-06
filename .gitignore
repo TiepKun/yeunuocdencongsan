@@ -4,3 +4,8 @@ out
 dist
 *.log
 .env*
+.DS_Store
+tmp/
+verification-artifacts/
+tsconfig.tsbuildinfo
+public/models/*.glb
