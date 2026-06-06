@@ -32,6 +32,7 @@ export default function HistoricalImageGallery({
               alt={image.caption}
               width={1600}
               height={1000}
+              unoptimized
               loading="lazy"
               sizes="(min-width: 640px) 520px, 92vw"
               className="max-h-[460px] w-full bg-black/30 object-contain"

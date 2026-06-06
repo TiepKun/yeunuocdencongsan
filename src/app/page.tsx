@@ -6,6 +6,7 @@ import DetailPanel from "@/components/DetailPanel";
 import JourneyControls from "@/components/JourneyControls";
 import LoadingScreen from "@/components/LoadingScreen";
 import SupplementalResources from "@/components/SupplementalResources";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const TimelineScene = dynamic(() => import("@/components/TimelineScene"), {
   ssr: false,
@@ -14,10 +15,11 @@ const TimelineScene = dynamic(() => import("@/components/TimelineScene"), {
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-coal text-ivory">
+    <main className="app-shell min-h-screen text-ivory">
+      <ThemeToggle />
       <section
         id="journey"
-        className="relative isolate overflow-hidden bg-coal"
+        className="relative isolate overflow-hidden"
       >
         <div className="museum-section-light" aria-hidden="true" />
         <div className="relative z-10">

@@ -12,6 +12,7 @@ import { useTimelineStore } from "@/store/useTimelineStore";
 import TimelineNode, { type NodePosition } from "./TimelineNode";
 
 const AUTO_ADVANCE_DELAY_MS = 10000;
+const MUSEUM_BAYS = Array.from({ length: 9 }, (_, index) => (index - 4) * 4);
 
 function getNodePositions(): NodePosition[] {
   const midpoint = (timelineEvents.length - 1) / 2;
@@ -67,11 +68,11 @@ function CameraRig({
 
     const position = positions[selectedIndex] ?? positions[0];
     const wideScene = selectedIndex < 2 || selectedIndex > positions.length - 3;
-    const cameraDistance = wideScene ? 7.45 : 6.85;
+    const cameraDistance = wideScene ? 6.35 : 5.9;
 
     destination.current.set(
       position[0],
-      reducedMotion ? 3.3 : 3.8,
+      reducedMotion ? 2.85 : 3.15,
       position[2] + cameraDistance
     );
     focus.current.set(position[0], 0.15, position[2]);
@@ -464,27 +465,136 @@ function JourneyMonument({ reducedMotion }: { reducedMotion: boolean }) {
   );
 }
 
-function SceneFloor() {
+function MuseumArchitecture({
+  positions,
+  theme
+}: {
+  positions: NodePosition[];
+  theme: "dark" | "light";
+}) {
+  const isLight = theme === "light";
+  const wallColor = isLight ? "#ded4c4" : "#182126";
+  const wallInsetColor = isLight ? "#c8bca8" : "#11191e";
+  const trimColor = isLight ? "#7b5a2d" : "#9d783e";
+  const floorColor = isLight ? "#b6aa98" : "#0a1215";
+  const ceilingColor = isLight ? "#eee7db" : "#10181d";
+
+  return (
+    <group>
+      <mesh receiveShadow position={[0, 1.36, -3.85]}>
+        <boxGeometry args={[35.2, 4.62, 0.24]} />
+        <meshStandardMaterial color={wallColor} roughness={0.92} />
+      </mesh>
+      <mesh receiveShadow position={[-17.48, 1.36, 0]}>
+        <boxGeometry args={[0.26, 4.62, 8]} />
+        <meshStandardMaterial color={wallInsetColor} roughness={0.9} />
+      </mesh>
+      <mesh receiveShadow position={[17.48, 1.36, 0]}>
+        <boxGeometry args={[0.26, 4.62, 8]} />
+        <meshStandardMaterial color={wallInsetColor} roughness={0.9} />
+      </mesh>
+      <mesh receiveShadow position={[0, 3.64, 0]}>
+        <boxGeometry args={[35.2, 0.18, 8]} />
+        <meshStandardMaterial color={ceilingColor} roughness={0.88} />
+      </mesh>
+
+      {MUSEUM_BAYS.map((x, index) => (
+        <group key={x}>
+          <mesh position={[x, 1.4, -3.66]}>
+            <boxGeometry args={[0.14, 4.05, 0.16]} />
+            <meshStandardMaterial
+              color={trimColor}
+              metalness={0.22}
+              roughness={0.54}
+            />
+          </mesh>
+          <mesh position={[x, 3.24, -3.42]} rotation={[0, 0, Math.PI / 2]}>
+            <cylinderGeometry args={[0.05, 0.05, 0.68, 12]} />
+            <meshStandardMaterial
+              color={trimColor}
+              emissive={isLight ? "#6a4b25" : "#c99a4a"}
+              emissiveIntensity={isLight ? 0.04 : 0.22}
+              metalness={0.45}
+              roughness={0.32}
+            />
+          </mesh>
+          {index % 3 === 1 && (
+            <pointLight
+              position={[x, 3.08, -2.88]}
+              color={isLight ? "#fff1d6" : "#f0c879"}
+              intensity={isLight ? 0.34 : 0.62}
+              distance={5.2}
+              decay={2}
+            />
+          )}
+        </group>
+      ))}
+
+      <mesh position={[0, 3.38, -3.57]}>
+        <boxGeometry args={[34.5, 0.1, 0.14]} />
+        <meshStandardMaterial color={trimColor} metalness={0.28} roughness={0.45} />
+      </mesh>
+      <mesh position={[0, -0.74, -3.52]}>
+        <boxGeometry args={[34.5, 0.36, 0.44]} />
+        <meshStandardMaterial color={trimColor} roughness={0.6} />
+      </mesh>
+
+      {positions.map((position, index) => (
+        <group key={`${position[0]}-${position[2]}`}>
+          <mesh
+            receiveShadow
+            position={[position[0], -0.88, position[2]]}
+            scale={[0.82, 0.12, 0.72]}
+          >
+            <boxGeometry args={[1, 1, 1]} />
+            <meshStandardMaterial
+              color={index % 2 === 0 ? floorColor : wallInsetColor}
+              roughness={0.68}
+              metalness={0.04}
+            />
+          </mesh>
+          <mesh
+            position={[position[0], -0.75, position[2]]}
+            rotation={[-Math.PI / 2, 0, 0]}
+          >
+            <ringGeometry args={[0.62, 0.71, 40]} />
+            <meshStandardMaterial
+              color={trimColor}
+              emissive={trimColor}
+              emissiveIntensity={isLight ? 0.04 : 0.16}
+              metalness={0.38}
+              roughness={0.4}
+            />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  );
+}
+
+function SceneFloor({ theme }: { theme: "dark" | "light" }) {
+  const isLight = theme === "light";
+
   return (
     <group>
       <mesh receiveShadow position={[0, -0.96, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[46, 15]} />
+        <planeGeometry args={[38, 11]} />
         <meshStandardMaterial
-          color="#0a1215"
+          color={isLight ? "#a99d8b" : "#0a1215"}
           roughness={0.9}
           metalness={0.02}
         />
       </mesh>
       <Grid
         position={[0, -0.935, 0]}
-        args={[46, 15]}
+        args={[38, 11]}
         cellSize={0.78}
         cellThickness={0.42}
-        cellColor="#24434a"
+        cellColor={isLight ? "#8d826f" : "#24434a"}
         sectionSize={3.9}
         sectionThickness={0.9}
-        sectionColor="#b78a45"
-        fadeDistance={18}
+        sectionColor={isLight ? "#755627" : "#b78a45"}
+        fadeDistance={15}
         fadeStrength={1.4}
         infiniteGrid={false}
       />
@@ -502,8 +612,10 @@ function SceneContent({
   const reducedMotion = useTimelineStore((state) => state.reducedMotion);
   const selectEvent = useTimelineStore((state) => state.selectEvent);
   const openDetail = useTimelineStore((state) => state.openDetail);
+  const theme = useTimelineStore((state) => state.theme);
   const selectedIndex = getTimelineIndex(selectedEventId);
   const selectedEvent = timelineEvents[selectedIndex] ?? timelineEvents[0];
+  const isLight = theme === "light";
 
   return (
     <>
@@ -512,19 +624,40 @@ function SceneContent({
         positions={positions}
         userControllingCamera={userControllingCamera}
       />
-      <color attach="background" args={["#080d11"]} />
-      <fog attach="fog" args={["#080d11", 8.4, 23]} />
-      <ambientLight intensity={0.52} />
+      <color attach="background" args={[isLight ? "#d8d0c3" : "#080d11"]} />
+      <fog
+        attach="fog"
+        args={[isLight ? "#d8d0c3" : "#080d11", 8.4, 23]}
+      />
+      <hemisphereLight
+        color={isLight ? "#fff8ea" : "#d9e8eb"}
+        groundColor={isLight ? "#8a7a64" : "#10171b"}
+        intensity={isLight ? 1.15 : 0.38}
+      />
+      <ambientLight intensity={isLight ? 0.82 : 0.52} />
       <directionalLight
         position={[3, 6, 6]}
-        intensity={1.46}
+        intensity={isLight ? 1.72 : 1.46}
       />
-      <pointLight color="#e3b256" position={[-5, 3.4, 2]} intensity={1.28} />
-      <pointLight color="#61c3bf" position={[4.8, 2.8, -2]} intensity={0.54} />
-      <pointLight color="#b94f45" position={[6, 2.4, 3]} intensity={0.42} />
+      <pointLight
+        color="#e3b256"
+        position={[-5, 3.4, 2]}
+        intensity={isLight ? 0.74 : 1.28}
+      />
+      <pointLight
+        color="#61c3bf"
+        position={[4.8, 2.8, -2]}
+        intensity={isLight ? 0.22 : 0.54}
+      />
+      <pointLight
+        color="#b94f45"
+        position={[6, 2.4, 3]}
+        intensity={isLight ? 0.16 : 0.42}
+      />
 
       <JourneyMonument reducedMotion={reducedMotion} />
-      <SceneFloor />
+      <MuseumArchitecture positions={positions} theme={theme} />
+      <SceneFloor theme={theme} />
       <TimelinePath
         positions={positions}
         selectedIndex={selectedIndex}
@@ -559,6 +692,8 @@ function SceneContent({
 export default function TimelineScene() {
   const [userControllingCamera, setUserControllingCamera] = useState(false);
   const resumeCameraTimer = useRef<number | null>(null);
+  const selectedEventId = useTimelineStore((state) => state.selectedEventId);
+  const selectedEvent = timelineEvents[getTimelineIndex(selectedEventId)] ?? timelineEvents[0];
 
   useEffect(() => {
     return () => {
@@ -569,10 +704,17 @@ export default function TimelineScene() {
   }, []);
 
   return (
-    <div className="h-screen min-h-[620px] w-full overflow-hidden bg-coal shadow-museum">
+    <div className="museum-scene-shell relative h-[72svh] min-h-[540px] max-h-[760px] w-full overflow-hidden shadow-museum">
+      <div className="museum-scene-heading">
+        <p>Bảo tàng số 3D</p>
+        <h1>Hành trình tìm đường cứu nước của Chủ tịch Hồ Chí Minh</h1>
+        <span>
+          {selectedEvent.year} · {selectedEvent.title}
+        </span>
+      </div>
       <Canvas
         dpr={[1, 1.15]}
-        camera={{ position: [0, 4.2, 11], fov: 50, near: 0.1, far: 80 }}
+        camera={{ position: [0, 3.35, 8.8], fov: 46, near: 0.1, far: 80 }}
         gl={{
           antialias: true,
           powerPreference: "high-performance"

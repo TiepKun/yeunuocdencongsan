@@ -1,8 +1,8 @@
 "use client";
 
-import { OrbitControls } from "@react-three/drei";
+import { Edges, OrbitControls } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
-import { X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Expand, X } from "lucide-react";
 import Image from "next/image";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 
@@ -14,17 +14,109 @@ import { EventSymbol } from "./TimelineNode";
 
 const fallbackSrc = "/historical-assets/placeholder.jpg";
 
+function MuseumDisplayRoom({ theme }: { theme: "dark" | "light" }) {
+  const isLight = theme === "light";
+  const wall = isLight ? "#e5ded2" : "#151e24";
+  const inset = isLight ? "#c9bcaa" : "#0c1419";
+  const trim = isLight ? "#76572d" : "#bd914a";
+
+  return (
+    <group>
+      <mesh receiveShadow position={[0, 1.05, -2.35]}>
+        <boxGeometry args={[7.2, 4.8, 0.22]} />
+        <meshStandardMaterial color={wall} roughness={0.9} />
+      </mesh>
+      <mesh receiveShadow position={[-3.45, 1.05, 0]}>
+        <boxGeometry args={[0.18, 4.8, 4.8]} />
+        <meshStandardMaterial color={inset} roughness={0.88} />
+      </mesh>
+      <mesh receiveShadow position={[3.45, 1.05, 0]}>
+        <boxGeometry args={[0.18, 4.8, 4.8]} />
+        <meshStandardMaterial color={inset} roughness={0.88} />
+      </mesh>
+      <mesh receiveShadow position={[0, -0.96, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[7.2, 5]} />
+        <meshStandardMaterial
+          color={isLight ? "#a99d8d" : "#091116"}
+          roughness={0.82}
+          metalness={0.04}
+        />
+      </mesh>
+
+      <mesh position={[0, 1.68, -2.18]}>
+        <boxGeometry args={[2.9, 0.08, 0.08]} />
+        <meshStandardMaterial
+          color={trim}
+          emissive={trim}
+          emissiveIntensity={isLight ? 0.04 : 0.26}
+          metalness={0.45}
+          roughness={0.36}
+        />
+      </mesh>
+      <mesh position={[0, -0.73, 0]} scale={[1.32, 0.24, 0.96]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial
+          color={isLight ? "#786a58" : "#242d31"}
+          roughness={0.55}
+          metalness={0.08}
+        />
+      </mesh>
+      <mesh position={[0, -0.57, 0]} scale={[1.2, 0.08, 0.84]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial
+          color={trim}
+          roughness={0.42}
+          metalness={0.32}
+        />
+      </mesh>
+
+      <mesh position={[0, 0.28, 0]} scale={[2.62, 2.02, 1.7]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshPhysicalMaterial
+          color={isLight ? "#d9f2f0" : "#8bc7c8"}
+          transparent
+          opacity={isLight ? 0.055 : 0.035}
+          roughness={0.08}
+          metalness={0.02}
+          transmission={0.2}
+          depthWrite={false}
+        />
+        <Edges color={isLight ? "#8d7654" : "#8eaaab"} />
+      </mesh>
+    </group>
+  );
+}
+
 function ResourceModel() {
   const selectedEventId = useTimelineStore((state) => state.selectedEventId);
+  const theme = useTimelineStore((state) => state.theme);
   const event = getTimelineEvent(selectedEventId);
+  const isLight = theme === "light";
 
   return (
     <>
-      <color attach="background" args={["#080b10"]} />
-      <ambientLight intensity={0.76} />
-      <directionalLight position={[3, 5, 5]} intensity={1.8} />
-      <pointLight position={[-2.2, 2.6, 2.8]} color="#c99a4a" intensity={1.4} />
-      <group position={[0, -0.05, 0]} scale={1.35}>
+      <color attach="background" args={[isLight ? "#d7cfc2" : "#080b10"]} />
+      <fog
+        attach="fog"
+        args={[isLight ? "#d7cfc2" : "#080b10", 7.5, 13]}
+      />
+      <hemisphereLight
+        color={isLight ? "#fff8ec" : "#dce8e8"}
+        groundColor={isLight ? "#796d5d" : "#0a1115"}
+        intensity={isLight ? 1.2 : 0.42}
+      />
+      <ambientLight intensity={isLight ? 0.94 : 0.68} />
+      <directionalLight
+        position={[3, 5, 5]}
+        intensity={isLight ? 1.6 : 1.8}
+      />
+      <pointLight
+        position={[-2.2, 2.6, 2.8]}
+        color="#c99a4a"
+        intensity={isLight ? 0.72 : 1.4}
+      />
+      <MuseumDisplayRoom theme={theme} />
+      <group position={[0, 0.2, 0.05]} scale={1.22}>
         <EventSymbol event={event} active modelScope="preview" />
       </group>
       <OrbitControls
@@ -33,8 +125,10 @@ function ResourceModel() {
         rotateSpeed={0.72}
         zoomSpeed={0.9}
         enablePan={false}
-        minDistance={2.2}
+        minDistance={2.7}
         maxDistance={7}
+        minPolarAngle={Math.PI / 5}
+        maxPolarAngle={Math.PI / 2.05}
       />
     </>
   );
@@ -46,6 +140,10 @@ export default function SupplementalResources() {
   const event = getTimelineEvent(selectedEventId);
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
   const [modelPreviewReady, setModelPreviewReady] = useState(false);
+  const [activeImageSelection, setActiveImageSelection] = useState({
+    eventId: selectedEventId,
+    index: 0
+  });
   const [selectedResource, setSelectedResource] = useState<{
     eventId: string;
     image: TimelineImage;
@@ -53,6 +151,19 @@ export default function SupplementalResources() {
   const images = useMemo(() => {
     return event.images.filter((image) => image.src !== fallbackSrc);
   }, [event.images]);
+  const activeImageIndex =
+    activeImageSelection.eventId === selectedEventId
+      ? activeImageSelection.index
+      : 0;
+  const activeImage = images[activeImageIndex] ?? images[0];
+  const activeImageSrc = activeImage
+    ? failedImages[activeImage.src]
+      ? fallbackSrc
+      : activeImage.src
+    : null;
+  const previewModelLabel =
+    event.models3d?.find((model) => model.showInPreview !== false)?.label ??
+    event.title;
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -64,7 +175,7 @@ export default function SupplementalResources() {
     const maybeLoadPreview = () => {
       const rect = section.getBoundingClientRect();
       const previewIsClearlyVisible =
-        rect.top < window.innerHeight * 0.4 && rect.bottom > 160;
+        rect.top < window.innerHeight * 0.55 && rect.bottom > 160;
 
       if (window.scrollY > 120 && previewIsClearlyVisible) {
         setModelPreviewReady(true);
@@ -83,6 +194,20 @@ export default function SupplementalResources() {
     };
   }, [modelPreviewReady]);
 
+  const showPreviousImage = () => {
+    setActiveImageSelection({
+      eventId: selectedEventId,
+      index: activeImageIndex === 0 ? images.length - 1 : activeImageIndex - 1
+    });
+  };
+
+  const showNextImage = () => {
+    setActiveImageSelection({
+      eventId: selectedEventId,
+      index: (activeImageIndex + 1) % images.length
+    });
+  };
+
   const selectedImage =
     selectedResource?.eventId === selectedEventId
       ? selectedResource.image
@@ -93,64 +218,148 @@ export default function SupplementalResources() {
       : selectedImage?.src;
 
   return (
-    <section ref={sectionRef} className="px-4 pb-12 sm:px-6 lg:px-8">
-      <div className="glass-panel mx-auto max-w-[1540px] p-4 text-ivory lg:p-5">
-        <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-          <h2 className="text-sm font-black uppercase tracking-[0.18em] text-brass">
-            Tư liệu ảnh bổ sung
-          </h2>
-          <p className="max-w-2xl text-right text-xs font-semibold uppercase tracking-[0.14em] text-ivory/58">
-            {event.year} · {event.title}
-          </p>
+    <section ref={sectionRef} className="resource-section pb-12">
+      <div className="resource-heading">
+        <div>
+          <p>Không gian trưng bày</p>
+          <h2>Mô hình và tư liệu lịch sử</h2>
         </div>
-        <div className="grid gap-5 lg:grid-cols-[minmax(320px,0.9fr)_minmax(0,1.1fr)]">
-          <div className="min-h-[360px] overflow-hidden rounded-lg border border-white/10 bg-black/25 lg:min-h-[520px]">
-            {modelPreviewReady ? (
-              <Canvas
-                dpr={[1, 1.3]}
-                camera={{
-                  position: [0, 1.4, 4.6],
-                  fov: 42,
-                  near: 0.1,
-                  far: 40
-                }}
-                gl={{
-                  antialias: true,
-                  powerPreference: "high-performance"
-                }}
-              >
-                <Suspense fallback={null}>
-                  <ResourceModel />
-                </Suspense>
-              </Canvas>
-            ) : (
-              <div className="flex min-h-[360px] items-center justify-center px-6 text-center text-sm font-semibold uppercase tracking-[0.16em] text-ivory/48 lg:min-h-[520px]">
-                Kéo xuống để tải mô hình 3D
-              </div>
-            )}
-          </div>
+        <span>
+          {event.year} · {event.title}
+        </span>
+      </div>
 
-          <div className="grid max-h-[560px] gap-4 overflow-y-auto pr-1 sm:grid-cols-2">
-            {images.length ? (
-              images.map((image) => {
+      <div className="museum-viewer">
+        <div className="museum-viewer-label">
+          <span>Hiện vật 3D</span>
+          <strong>{previewModelLabel}</strong>
+        </div>
+        {modelPreviewReady ? (
+          <Canvas
+            dpr={[1, 1.3]}
+            camera={{
+              position: [0, 1.22, 4.9],
+              fov: 42,
+              near: 0.1,
+              far: 40
+            }}
+            gl={{
+              antialias: true,
+              powerPreference: "high-performance"
+            }}
+          >
+            <Suspense fallback={null}>
+              <ResourceModel />
+            </Suspense>
+          </Canvas>
+        ) : (
+          <div className="museum-viewer-loading">
+            Kéo xuống để tải không gian trưng bày 3D
+          </div>
+        )}
+      </div>
+
+      <div className="archive-heading">
+        <div>
+          <p>Tư liệu ảnh bổ sung</p>
+          <h2>{event.title}</h2>
+        </div>
+        {images.length > 0 && (
+          <span>
+            {String(activeImageIndex + 1).padStart(2, "0")} /{" "}
+            {String(images.length).padStart(2, "0")}
+          </span>
+        )}
+      </div>
+
+      {activeImage && activeImageSrc ? (
+        <>
+          <figure className="archive-feature">
+            <button
+              type="button"
+              className="archive-feature-image"
+              aria-label={`Mở chi tiết ảnh: ${activeImage.caption}`}
+              onClick={() =>
+                setSelectedResource({ eventId: event.id, image: activeImage })
+              }
+            >
+              <Image
+                src={activeImageSrc}
+                alt={activeImage.caption}
+                fill
+                unoptimized
+                sizes="100vw"
+                className="object-contain"
+                onError={() => {
+                  if (activeImage.src !== fallbackSrc) {
+                    setFailedImages((current) => ({
+                      ...current,
+                      [activeImage.src]: true
+                    }));
+                  }
+                }}
+              />
+              <span className="archive-expand">
+                <Expand aria-hidden="true" className="h-5 w-5" />
+                Xem chi tiết
+              </span>
+            </button>
+
+            {images.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  aria-label="Ảnh tư liệu trước"
+                  className="archive-arrow archive-arrow-left"
+                  onClick={showPreviousImage}
+                >
+                  <ChevronLeft aria-hidden="true" className="h-6 w-6" />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Ảnh tư liệu sau"
+                  className="archive-arrow archive-arrow-right"
+                  onClick={showNextImage}
+                >
+                  <ChevronRight aria-hidden="true" className="h-6 w-6" />
+                </button>
+              </>
+            )}
+
+            <figcaption>
+              <p>{activeImage.caption}</p>
+              <span>{activeImage.sourceNote}</span>
+            </figcaption>
+          </figure>
+
+          {images.length > 1 && (
+            <div className="archive-thumbnails" aria-label="Danh sách ảnh tư liệu">
+              {images.map((image, index) => {
                 const src = failedImages[image.src] ? fallbackSrc : image.src;
+                const active = index === activeImageIndex;
 
                 return (
                   <button
                     key={image.src}
                     type="button"
-                    className="group overflow-hidden rounded-lg border border-white/10 bg-black/20 text-left transition hover:border-brass/60 focus:outline-none focus:ring-2 focus:ring-brass"
+                    aria-label={`Chọn ảnh ${index + 1}: ${image.caption}`}
+                    aria-pressed={active}
+                    className="archive-thumbnail"
                     onClick={() =>
-                      setSelectedResource({ eventId: event.id, image })
+                      setActiveImageSelection({
+                        eventId: selectedEventId,
+                        index
+                      })
                     }
                   >
-                    <div className="relative aspect-[4/3] w-full bg-black/30">
+                    <span className="relative block aspect-video w-full">
                       <Image
                         src={src}
-                        alt={image.caption}
+                        alt=""
                         fill
-                        sizes="(min-width: 1024px) 360px, 92vw"
-                        className="object-contain p-2 transition duration-200 group-hover:scale-[1.02]"
+                        unoptimized
+                        sizes="240px"
+                        className="object-cover"
                         onError={() => {
                           if (image.src !== fallbackSrc) {
                             setFailedImages((current) => ({
@@ -160,28 +369,26 @@ export default function SupplementalResources() {
                           }
                         }}
                       />
-                    </div>
-                    <p className="line-clamp-3 border-t border-white/10 px-3 py-3 text-xs leading-5 text-ivory/72">
-                      {image.caption}
-                    </p>
+                    </span>
+                    <span>{String(index + 1).padStart(2, "0")}</span>
                   </button>
                 );
-              })
-            ) : (
-              <div className="col-span-full flex min-h-44 items-center justify-center rounded-lg border border-white/10 bg-black/20 px-6 text-center text-sm text-ivory/60">
-                Chưa có tư liệu ảnh thật. Các mốc thiếu ảnh vẫn được ghi chú trong chi tiết sự kiện.
-              </div>
-            )}
-          </div>
+              })}
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="archive-empty">
+          Chưa có tư liệu ảnh thật cho mốc lịch sử này.
         </div>
-      </div>
+      )}
 
       {selectedImage && selectedImageSrc && (
         <div
           role="dialog"
           aria-modal="true"
           aria-labelledby="supplemental-image-title"
-          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/72 p-3 backdrop-blur-sm sm:p-6"
+          className="resource-dialog-backdrop"
         >
           <button
             type="button"
@@ -189,12 +396,13 @@ export default function SupplementalResources() {
             className="absolute inset-0 cursor-default"
             onClick={() => setSelectedResource(null)}
           />
-          <div className="relative z-10 grid max-h-[calc(100vh-2rem)] w-full max-w-6xl overflow-hidden rounded-lg border border-white/12 bg-[#081016] shadow-museum md:grid-cols-[minmax(0,1.35fr)_360px]">
-            <div className="relative min-h-[320px] bg-black/45 md:min-h-[620px]">
+          <div className="resource-dialog">
+            <div className="relative min-h-[320px] md:min-h-[620px]">
               <Image
                 src={selectedImageSrc}
                 alt={selectedImage.caption}
                 fill
+                unoptimized
                 sizes="(min-width: 768px) 70vw, 94vw"
                 className="object-contain p-4"
                 onError={() => {
@@ -207,7 +415,7 @@ export default function SupplementalResources() {
                 }}
               />
             </div>
-            <aside className="max-h-[calc(100vh-2rem)] overflow-y-auto border-t border-white/10 p-5 md:border-l md:border-t-0">
+            <aside>
               <div className="mb-5 flex items-start justify-between gap-4">
                 <div>
                   <p className="text-xs font-black uppercase tracking-[0.18em] text-brass">
@@ -224,7 +432,7 @@ export default function SupplementalResources() {
                   type="button"
                   aria-label="Đóng popup ảnh"
                   onClick={() => setSelectedResource(null)}
-                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center border border-white/10 bg-black/30 text-ivory/70 transition hover:border-brass/70 hover:text-ivory focus:outline-none focus:ring-2 focus:ring-brass"
+                  className="resource-dialog-close"
                 >
                   <X aria-hidden="true" className="h-5 w-5" />
                 </button>
