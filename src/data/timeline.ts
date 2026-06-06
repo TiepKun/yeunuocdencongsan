@@ -220,8 +220,20 @@ export const timelineEvents: TimelineEvent[] = [
         src: "/models/optimized/Lenin-tren-buc-phat-bieu-optimized.glb",
         timelineSrc: "/models/timeline/Lenin-tren-buc-phat-bieu-timeline.glb",
         label: "Lênin trên bục phát biểu",
-        fitSize: 1.38,
-        rotation: [0, -0.22, 0]
+        fitSize: 1.28,
+        showInPreview: false,
+        position: [-0.42, 0, 0.04],
+        rotation: [0, -0.22, 0],
+        scale: 0.76
+      },
+      {
+        src: "/models/optimized/La-Humanite-optimized.glb",
+        timelineSrc: "/models/timeline/La-Humanite-timeline.glb",
+        label: "Báo L'Humanité năm 1920",
+        fitSize: 1.12,
+        position: [0.48, -0.02, 0.18],
+        rotation: [1.18, 0, 0.08],
+        scale: 0.74
       }
     ],
     images: [
@@ -326,8 +338,17 @@ export const timelineEvents: TimelineEvent[] = [
     ideologicalMeaning:
       "Củng cố cơ sở lý luận Mác-Lênin cho tư tưởng về cách mạng giải phóng dân tộc, nhất là quan hệ giữa vấn đề dân tộc và cách mạng vô sản.",
     modelType: "soviet",
-    missingModelDescription:
-      "Cần GLB mô tả hoạt động ở Liên Xô 1923-1924, ví dụ tòa nhà Quốc tế Cộng sản, hội trường học tập hoặc biểu tượng Moscow thời kỳ này.",
+    models3d: [
+      {
+        src: "/models/optimized/Sao-do-optimized.glb",
+        timelineSrc: "/models/timeline/Sao-do-timeline.glb",
+        label: "Biểu tượng sao đỏ",
+        fitSize: 1.36,
+        rotation: [0, -0.16, 0],
+        materialColor: "#b5282f",
+        emissiveColor: "#4f090d"
+      }
+    ],
     images: [
       {
         src: "/historical-assets/1923-1924-lien-xo-quoc-te-cong-san.jpg",
@@ -374,8 +395,16 @@ export const timelineEvents: TimelineEvent[] = [
     ideologicalMeaning:
       "Làm sâu sắc tư tưởng chống chủ nghĩa thực dân, đồng thời củng cố quan điểm giải phóng dân tộc phải gắn với phong trào cách mạng tiến bộ trên thế giới.",
     modelType: "justice_book",
-    missingModelDescription:
-      "Cần GLB về tác phẩm Bản án chế độ thực dân Pháp, có thể là mô hình sách/tài liệu với bố cục tố cáo chủ nghĩa thực dân.",
+    models3d: [
+      {
+        src: "/models/optimized/Ban-an-che-do-thuc-dan-Phap-optimized.glb",
+        timelineSrc:
+          "/models/timeline/Ban-an-che-do-thuc-dan-Phap-timeline.glb",
+        label: "Bản án chế độ thực dân Pháp",
+        fitSize: 1.42,
+        rotation: [0, -0.24, 0]
+      }
+    ],
     images: [
       {
         src: "/historical-assets/1925-ban-an-che-do-thuc-dan-phap.jpg",
@@ -403,8 +432,15 @@ export const timelineEvents: TimelineEvent[] = [
     ideologicalMeaning:
       "Góp phần hình thành tư tưởng về con đường cách mạng Việt Nam: có Đảng lãnh đạo, lấy quần chúng làm gốc, kết hợp độc lập dân tộc với mục tiêu xã hội chủ nghĩa.",
     modelType: "road_book",
-    missingModelDescription:
-      "Cần GLB về tác phẩm Đường Kách mệnh năm 1927 hoặc mô hình sách/tài liệu huấn luyện cán bộ cách mạng.",
+    models3d: [
+      {
+        src: "/models/optimized/Duong-Kach-menh-optimized.glb",
+        timelineSrc: "/models/timeline/Duong-Kach-menh-timeline.glb",
+        label: "Tác phẩm Đường Kách mệnh",
+        fitSize: 1.42,
+        rotation: [0, 0.22, 0]
+      }
+    ],
     images: [
       {
         src: "/historical-assets/1927-duong-kach-menh.jpg",

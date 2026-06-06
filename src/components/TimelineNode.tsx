@@ -101,17 +101,46 @@ function LoadedTimelineModel({
           child.material = fallbackMaterial.clone();
         } else if (Array.isArray(child.material)) {
           child.material = child.material.map((material) => {
-            material.needsUpdate = true;
-            return material;
+            const nextMaterial = material.clone();
+
+            if (model.materialColor && "color" in nextMaterial) {
+              (
+                nextMaterial as THREE.Material & { color: THREE.Color }
+              ).color.set(model.materialColor);
+            }
+
+            if (model.emissiveColor && "emissive" in nextMaterial) {
+              (
+                nextMaterial as THREE.Material & { emissive: THREE.Color }
+              ).emissive.set(model.emissiveColor);
+            }
+
+            nextMaterial.needsUpdate = true;
+            return nextMaterial;
           });
         } else {
-          child.material.needsUpdate = true;
+          const nextMaterial = child.material.clone();
+
+          if (model.materialColor && "color" in nextMaterial) {
+            (
+              nextMaterial as THREE.Material & { color: THREE.Color }
+            ).color.set(model.materialColor);
+          }
+
+          if (model.emissiveColor && "emissive" in nextMaterial) {
+            (
+              nextMaterial as THREE.Material & { emissive: THREE.Color }
+            ).emissive.set(model.emissiveColor);
+          }
+
+          nextMaterial.needsUpdate = true;
+          child.material = nextMaterial;
         }
       }
     });
 
     return sceneClone;
-  }, [model.fitSize, scene]);
+  }, [model.emissiveColor, model.fitSize, model.materialColor, scene]);
 
   return (
     <group
@@ -708,7 +737,7 @@ export function EventSymbol({
 }: SymbolProps) {
   const visibleModels =
     modelScope === "preview"
-      ? event.models3d
+      ? event.models3d?.filter((model) => model.showInPreview !== false)
       : event.models3d?.filter((model) => model.showInTimeline !== false);
 
   if (visibleModels?.length) {

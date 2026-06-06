@@ -32,9 +32,12 @@ export type TimelineModel3D = {
   label: string;
   fitSize?: number;
   showInTimeline?: boolean;
+  showInPreview?: boolean;
   position?: [number, number, number];
   rotation?: [number, number, number];
   scale?: number;
+  materialColor?: string;
+  emissiveColor?: string;
 };
 
 export type TimelineEvent = {
