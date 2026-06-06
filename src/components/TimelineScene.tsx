@@ -680,6 +680,7 @@ function SceneContent({
           event={event}
           position={positions[index]}
           selected={event.id === selectedEventId}
+          loadModel={Math.abs(index - selectedIndex) <= 1}
           reducedMotion={reducedMotion}
           onSelect={selectEvent}
         />

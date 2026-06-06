@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: yeunuocdencongsan-static
+    runtime: static
+    buildCommand: RENDER_STATIC_EXPORT=true npm ci && npm run build
+    staticPublishPath: ./out
+    headers:
+      - path: /_next/static/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /models/*
+        name: Cache-Control
+        value: public, max-age=86400
+      - path: /historical-assets/*
+        name: Cache-Control
+        value: public, max-age=86400

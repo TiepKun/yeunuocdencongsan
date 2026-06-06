@@ -14,6 +14,7 @@ type TimelineNodeProps = {
   event: TimelineEvent;
   position: NodePosition;
   selected: boolean;
+  loadModel?: boolean;
   reducedMotion: boolean;
   onSelect: (id: string) => void;
 };
@@ -760,6 +761,7 @@ export default function TimelineNode({
   event,
   position,
   selected,
+  loadModel = true,
   reducedMotion,
   onSelect
 }: TimelineNodeProps) {
@@ -826,7 +828,11 @@ export default function TimelineNode({
           opacity={active ? 0.86 : 0.48}
         />
       </mesh>
-      <EventSymbol event={event} active={active} />
+      {loadModel ? (
+        <EventSymbol event={event} active={active} />
+      ) : (
+        <FallbackEventSymbol event={event} active={active} />
+      )}
       {selected && (
         <Billboard position={[0, 1.24, 0]}>
           <Text
