@@ -12,8 +12,13 @@ import { useTimelineStore } from "@/store/useTimelineStore";
 import TimelineNode, { type NodePosition } from "./TimelineNode";
 
 const AUTO_ADVANCE_DELAY_MS = 10000;
-const TIMELINE_MODEL_IDLE_DELAY_MS = 2400;
+const TIMELINE_MODEL_INITIAL_DELAY_MS = 420;
+const TIMELINE_MODEL_STAGGER_MS = 260;
 const MUSEUM_BAYS = Array.from({ length: 9 }, (_, index) => (index - 4) * 4);
+
+function eventHasTimelineModel(event: (typeof timelineEvents)[number]) {
+  return event.models3d?.some((model) => model.showInTimeline !== false) ?? false;
+}
 
 function getNodePositions(): NodePosition[] {
   const midpoint = (timelineEvents.length - 1) / 2;
@@ -647,26 +652,44 @@ function SceneContent({
   const openDetail = useTimelineStore((state) => state.openDetail);
   const isAutoPlaying = useTimelineStore((state) => state.isAutoPlaying);
   const theme = useTimelineStore((state) => state.theme);
-  const [modelReadyEventId, setModelReadyEventId] = useState<string | null>(null);
+  const [readyTimelineModelIds, setReadyTimelineModelIds] = useState<Set<string>>(
+    () => new Set()
+  );
   const selectedIndex = getTimelineIndex(selectedEventId);
   const selectedEvent = timelineEvents[selectedIndex] ?? timelineEvents[0];
   const isLight = theme === "light";
-  const timelineModelReady =
-    !isAutoPlaying &&
-    !userControllingCamera &&
-    modelReadyEventId === selectedEventId;
 
   useEffect(() => {
     if (isAutoPlaying || userControllingCamera) {
       return;
     }
 
-    const timer = window.setTimeout(() => {
-      setModelReadyEventId(selectedEventId);
-    }, TIMELINE_MODEL_IDLE_DELAY_MS);
+    const timers: number[] = [];
+    const loadOrder = timelineEvents
+      .map((event, index) => ({ event, distance: Math.abs(index - selectedIndex) }))
+      .filter(({ event }) => eventHasTimelineModel(event))
+      .sort((left, right) => left.distance - right.distance);
 
-    return () => window.clearTimeout(timer);
-  }, [isAutoPlaying, selectedEventId, userControllingCamera]);
+    loadOrder.forEach(({ event }, index) => {
+      const timer = window.setTimeout(() => {
+        setReadyTimelineModelIds((current) => {
+          if (current.has(event.id)) {
+            return current;
+          }
+
+          const next = new Set(current);
+          next.add(event.id);
+          return next;
+        });
+      }, TIMELINE_MODEL_INITIAL_DELAY_MS + index * TIMELINE_MODEL_STAGGER_MS);
+
+      timers.push(timer);
+    });
+
+    return () => {
+      timers.forEach((timer) => window.clearTimeout(timer));
+    };
+  }, [isAutoPlaying, selectedIndex, userControllingCamera]);
 
   return (
     <>
@@ -731,7 +754,7 @@ function SceneContent({
           event={event}
           position={positions[index]}
           selected={event.id === selectedEventId}
-          loadModel={timelineModelReady && index === selectedIndex}
+          loadModel={readyTimelineModelIds.has(event.id)}
           reducedMotion={reducedMotion}
           onSelect={selectEvent}
         />

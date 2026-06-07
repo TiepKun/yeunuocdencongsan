@@ -129,8 +129,8 @@ export default function DetailPanel() {
               </section>
 
               <p className="border-t border-white/10 pt-4 text-xs leading-5 text-ivory/50">
-                Ghi chú nguồn: Theo giáo trình Tư tưởng Hồ Chí Minh / tư liệu
-                ảnh được cung cấp.
+                Ghi chú nguồn: Theo giáo trình Tư tưởng Hồ Chí Minh và bộ tư
+                liệu lịch sử về Chủ tịch Hồ Chí Minh.
               </p>
             </div>
           </motion.aside>

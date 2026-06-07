@@ -512,9 +512,42 @@ button {
   color: var(--text-subtle);
   font-size: 0.76rem;
   font-weight: 800;
+  line-height: 1.7;
   text-align: center;
   text-transform: uppercase;
   letter-spacing: 0.12em;
+}
+
+.model-load-button {
+  display: inline-flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 76%, transparent);
+  background: var(--accent);
+  padding: 0 1.1rem;
+  color: #080b10;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  box-shadow: 0 18px 42px color-mix(in srgb, var(--accent) 24%, transparent);
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.model-load-button:hover {
+  border-color: var(--accent-strong);
+  background: var(--accent-strong);
+  transform: translateY(-1px);
+}
+
+.model-load-button:focus-visible {
+  outline: 2px solid var(--accent-strong);
+  outline-offset: 3px;
 }
 
 .archive-heading {

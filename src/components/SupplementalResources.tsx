@@ -2,9 +2,9 @@
 
 import { Edges, OrbitControls } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
-import { ChevronLeft, ChevronRight, Expand, X } from "lucide-react";
+import { Box, ChevronLeft, ChevronRight, Expand, X } from "lucide-react";
 import Image from "next/image";
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 
 import { getTimelineEvent } from "@/data/timeline";
 import { useTimelineStore } from "@/store/useTimelineStore";
@@ -135,11 +135,10 @@ function ResourceModel() {
 }
 
 export default function SupplementalResources() {
-  const sectionRef = useRef<HTMLElement>(null);
   const selectedEventId = useTimelineStore((state) => state.selectedEventId);
   const event = getTimelineEvent(selectedEventId);
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
-  const [modelPreviewReady, setModelPreviewReady] = useState(false);
+  const [loadedModelEventId, setLoadedModelEventId] = useState<string | null>(null);
   const [activeImageSelection, setActiveImageSelection] = useState({
     eventId: selectedEventId,
     index: 0
@@ -151,6 +150,10 @@ export default function SupplementalResources() {
   const images = useMemo(() => {
     return event.images.filter((image) => image.src !== fallbackSrc);
   }, [event.images]);
+  const previewModels = useMemo(() => {
+    return event.models3d?.filter((model) => model.showInPreview !== false) ?? [];
+  }, [event.models3d]);
+  const modelPreviewReady = loadedModelEventId === selectedEventId;
   const activeImageIndex =
     activeImageSelection.eventId === selectedEventId
       ? activeImageSelection.index
@@ -162,37 +165,7 @@ export default function SupplementalResources() {
       : activeImage.src
     : null;
   const previewModelLabel =
-    event.models3d?.find((model) => model.showInPreview !== false)?.label ??
-    event.title;
-
-  useEffect(() => {
-    const section = sectionRef.current;
-
-    if (!section || modelPreviewReady) {
-      return;
-    }
-
-    const maybeLoadPreview = () => {
-      const rect = section.getBoundingClientRect();
-      const previewIsClearlyVisible =
-        rect.top < window.innerHeight * 0.55 && rect.bottom > 160;
-
-      if (window.scrollY > 120 && previewIsClearlyVisible) {
-        setModelPreviewReady(true);
-      }
-    };
-
-    const initialCheck = window.requestAnimationFrame(maybeLoadPreview);
-
-    window.addEventListener("scroll", maybeLoadPreview, { passive: true });
-    window.addEventListener("resize", maybeLoadPreview);
-
-    return () => {
-      window.cancelAnimationFrame(initialCheck);
-      window.removeEventListener("scroll", maybeLoadPreview);
-      window.removeEventListener("resize", maybeLoadPreview);
-    };
-  }, [modelPreviewReady]);
+    previewModels.map((model) => model.label).join(" · ") || event.title;
 
   const showPreviousImage = () => {
     setActiveImageSelection({
@@ -218,11 +191,11 @@ export default function SupplementalResources() {
       : selectedImage?.src;
 
   return (
-    <section ref={sectionRef} className="resource-section pb-12">
+    <section className="resource-section pb-12">
       <div className="resource-heading">
         <div>
-          <p>Không gian trưng bày</p>
-          <h2>Mô hình và tư liệu lịch sử</h2>
+          <p>Tư liệu mô hình 3D</p>
+          <h2>Mô hình 3D riêng cho từng mốc</h2>
         </div>
         <span>
           {event.year} · {event.title}
@@ -231,30 +204,45 @@ export default function SupplementalResources() {
 
       <div className="museum-viewer">
         <div className="museum-viewer-label">
-          <span>Hiện vật 3D</span>
+          <span>Mô hình 3D chi tiết</span>
           <strong>{previewModelLabel}</strong>
         </div>
-        {modelPreviewReady ? (
-          <Canvas
-            dpr={[1, 1.3]}
-            camera={{
-              position: [0, 1.22, 4.9],
-              fov: 42,
-              near: 0.1,
-              far: 40
-            }}
-            gl={{
-              antialias: true,
-              powerPreference: "high-performance"
-            }}
-          >
-            <Suspense fallback={null}>
-              <ResourceModel />
-            </Suspense>
-          </Canvas>
+        {previewModels.length > 0 ? (
+          modelPreviewReady ? (
+            <Canvas
+              key={selectedEventId}
+              dpr={[1, 1.3]}
+              camera={{
+                position: [0, 1.22, 4.9],
+                fov: 42,
+                near: 0.1,
+                far: 40
+              }}
+              gl={{
+                antialias: true,
+                powerPreference: "high-performance"
+              }}
+            >
+              <Suspense fallback={null}>
+                <ResourceModel />
+              </Suspense>
+            </Canvas>
+          ) : (
+            <div className="museum-viewer-loading">
+              <button
+                type="button"
+                className="model-load-button"
+                onClick={() => setLoadedModelEventId(selectedEventId)}
+              >
+                <Box aria-hidden="true" className="h-5 w-5" />
+                Tải mô hình 3D
+              </button>
+            </div>
+          )
         ) : (
           <div className="museum-viewer-loading">
-            Kéo xuống để tải không gian trưng bày 3D
+            {event.missingModelDescription ??
+              "Chưa có mô hình GLB tương ứng cho mốc lịch sử này."}
           </div>
         )}
       </div>

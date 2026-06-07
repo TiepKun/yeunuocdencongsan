@@ -31,10 +31,9 @@ export const phaseMeta: Record<
 };
 
 const sourceNote =
-  "Tư liệu ảnh trích từ file 1890 1922.docx do người dùng cung cấp.";
-const providedImageNote = "Tư liệu ảnh do người dùng cung cấp.";
-const missingImageNote =
-  "Cần bổ sung tư liệu ảnh thật. Không sử dụng ảnh mô phỏng thay tư liệu lịch sử.";
+  "Nguồn tư liệu ảnh: bộ tư liệu lịch sử về Chủ tịch Hồ Chí Minh.";
+const providedImageNote =
+  "Nguồn tư liệu ảnh: tư liệu về Chủ tịch Hồ Chí Minh và phong trào cách mạng Việt Nam.";
 
 export const timelineEvents: TimelineEvent[] = [
   {
@@ -86,7 +85,7 @@ export const timelineEvents: TimelineEvent[] = [
         timelineSrc: "/models/timeline/Latouche-Treville-timeline.glb",
         label: "Tàu Latouche-Tréville",
         fitSize: 1.7,
-        position: [0.02, -0.03, 0],
+        position: [0.02, 0.2, 0],
         rotation: [0, -0.48, 0]
       },
       {
@@ -94,7 +93,7 @@ export const timelineEvents: TimelineEvent[] = [
         timelineSrc: "/models/timeline/Nguyen-Tat-Thanh-1911-timeline.glb",
         label: "Nguyễn Tất Thành năm 1911",
         fitSize: 0.95,
-        position: [-0.52, -0.02, 0.3],
+        position: [-0.52, 0.18, 0.3],
         rotation: [0, 0.3, 0],
         scale: 0.72
       }
@@ -309,6 +308,7 @@ export const timelineEvents: TimelineEvent[] = [
         timelineSrc: "/models/timeline/la%20peria-timeline.glb",
         label: "Báo Le Paria",
         fitSize: 1.18,
+        position: [0, 0.2, 0],
         rotation: [0, 0.2, 0]
       }
     ],
