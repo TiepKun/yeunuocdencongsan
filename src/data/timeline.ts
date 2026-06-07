@@ -220,8 +220,7 @@ export const timelineEvents: TimelineEvent[] = [
         timelineSrc: "/models/timeline/Lenin-tren-buc-phat-bieu-timeline.glb",
         label: "Lênin trên bục phát biểu",
         fitSize: 1.28,
-        showInPreview: false,
-        position: [-0.42, 0, 0.04],
+        position: [-0.72, 0.06, 0.02],
         rotation: [0, -0.22, 0],
         scale: 0.76
       },
@@ -230,7 +229,7 @@ export const timelineEvents: TimelineEvent[] = [
         timelineSrc: "/models/timeline/La-Humanite-timeline.glb",
         label: "Báo L'Humanité năm 1920",
         fitSize: 1.12,
-        position: [0.48, -0.02, 0.18],
+        position: [0.58, -0.02, 0.18],
         rotation: [1.18, 0, 0.08],
         scale: 0.74
       }
